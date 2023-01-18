@@ -1,0 +1,466 @@
+<div class='diagrambuilder-container' style="display: block;">
+  <div class='header navbar'>
+    <div class="db-header-container">
+      <div class="db-diagram-name-container">
+        <span id='diagramName' style="width:250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          class="db-diagram-name" onclick="renameDiagram(event)">Untitled Diagram</span>
+        <input id='diagramEditable' type="text" class="db-diagram-name" onkeydown="diagramNameKeyDown(event)"
+          onfocusout="diagramNameChange(event)" />
+        <span id='diagramreport' class="db-diagram-name db-save-text"></span>
+      </div>
+      <div class='db-menu-container'>
+        <div class="db-menu-style">
+          <button ejs-dropdownbutton id="btnFileMenu" cssClass='db-dropdown-menu'
+            [items]='dropDownDataSources.fileMenuItems' content="File" (select)="menuClick($event)"
+            (beforeItemRender)="beforeItemRender($event)" (beforeOpen)="beforeOpen($event)"
+            (beforeClose)="beforeClose($event)">
+          </button>
+        </div>
+        <div class="db-menu-style">
+          <button ejs-dropdownbutton id="btnEditMenu" cssClass='db-dropdown-menu'
+            [items]='dropDownDataSources.editMenuItems' content="Edit" (select)="menuClick($event)"
+            (beforeItemRender)="beforeItemRender($event)" (beforeOpen)="beforeOpen($event)"
+            (beforeClose)="beforeClose($event)">
+          </button>
+
+        </div>
+        <div class="db-menu-style">
+          <button ejs-dropdownbutton id="btnViewMenu" cssClass='db-dropdown-menu'
+            [items]='dropDownDataSources.viewMenuItems' content="View" (select)="menuClick($event)"
+            (beforeItemRender)="beforeItemRender($event)" (beforeOpen)="beforeOpen($event)"
+            (beforeClose)="beforeClose($event)">
+          </button>
+
+        </div>
+
+        <div class="db-menu-style">
+          <button ejs-dropdownbutton #btnWindowMenu id="btnWindowMenu" cssClass='db-dropdown-menu'
+            [items]='dropDownDataSources.windowMenuItems' content="Window" (select)="menuClick($event)"
+            (beforeItemRender)="beforeItemRender($event)" (beforeOpen)="beforeOpen($event)"
+            (beforeClose)="beforeClose($event)">
+          </button>
+
+        </div>
+      </div>
+    </div>
+    <div class='db-toolbar-editor'>
+      <div class='db-toolbar-container'>
+        <ejs-toolbar #toolbarEditor id="toolbarEditor" height="28" width="100%" (clicked)="toolbarClick($event)">
+          <e-items>
+            <e-item prefixIcon="sf-icon-undo" tooltipText='Undo' disabled="false"></e-item>
+            <e-item prefixIcon="sf-icon-redo" tooltipText='Redo' disabled="false"></e-item>
+            <e-item type='Separator'></e-item>
+            <e-item prefixIcon="sf-icon-pointer tb-icons" tooltipText='Select Tool'
+              cssClass="tb-item-middle tb-item-selected"></e-item>
+            <e-item prefixIcon="sf-icon-pan tb-icons" tooltipText='Pan Tool' cssClass="tb-item-start"></e-item>
+            <e-item type='Separator'></e-item>
+            <e-item prefixIcon="sf-icon-add-child" tooltipText='Add Child' disabled="false"></e-item>
+            <e-item prefixIcon="sf-icon-add-sibling" tooltipText='Add Sibling' disabled="false"></e-item>
+            <e-item prefixIcon="sf-icon-multiple-child" tooltipText='Add Multiple Child' disabled="false"></e-item>
+            <e-item align="right">
+              <ng-template #template>
+                <ejs-radiobutton #diagramradio id="diagramradio" checked="true" label="Diagram View"
+                  (change)="diagramradioChange($event)"></ejs-radiobutton>
+              </ng-template>
+            </e-item>
+            <e-item align="right">
+              <ng-template #template>
+                <ejs-radiobutton #treeviewradio id="treeviewradio" label="Text View"
+                  (change)="treeviewradioChange($event)"></ejs-radiobutton>
+              </ng-template>
+            </e-item>
+            <e-item align="right">
+              <ng-template #template>
+                <button ejs-dropdownbutton #btnZoomIncrement id="btnZoomIncrement" cssClass='db-dropdown-menu'
+                  [items]='dropDownDataSources.zoomMenuItems' content="100%" (select)="onZoomChange($event)">
+                </button>
+              </ng-template>
+            </e-item>
+          </e-items>
+
+        </ejs-toolbar>
+
+      </div>
+      <div class="db-toolbar-hide-btn">
+        <button #btnHideToolbar ejs-button iconCss="sf-icon-properties" id="btnHideToolbar" isPrimary="true" (click)="hideToolbarClick()"></button>
+
+      </div>
+    </div>
+  </div>
+  <div class='row content'>
+
+    <div class='main-content' role='main'>
+      <div id="treeview" class="db-diagram-container" style="overflow:auto;display: none;">
+        <div class="control_wrapper">
+          <!-- Initialize TreeView -->
+          <ejs-treeview id='tree' #tree [fields]='field' allowEditing="true" (keyPress)="keyPress($event)"
+            (nodeEdited)='nodeEdited($event)'></ejs-treeview>
+          <ejs-contextmenu #contentmenutree id='contentmenutree' target='#tree' [items]='menuItems'
+            (beforeOpen)='beforeopen($event)' (select)='treemenuclick($event)'></ejs-contextmenu>
+          <ul id="contextmenu"></ul>
+        </div>
+      </div>
+      <div id="overlay" class="db-diagram-container" style="position:absolute ;">
+        <div id="diagramContainerDiv">
+          <ejs-diagram #diagram id="diagram" width="100%" height="600px" [snapSettings]='snapSettings'
+            [rulerSettings]="rulerSettings" [layout]="layout" [selectedItems]="selectedItems" [tool]="tool"
+            [dataSourceSettings]='dataSourceSettings' [getNodeDefaults]="getNodeDefaults.bind(this)"
+            [getConnectorDefaults]="getConnectorDefaults.bind(this)" [getCustomTool]='getCustomTool'
+            (selectionChange)='diagramEvents.selectionChange($event)' (created)="diagramEvents.created()"
+            (scrollChange)="diagramEvents.scrollChange($event)" (historyChange)="diagramEvents.historyChange($event)"
+            (textEdit)="diagramEvents.textEdit($event)" (keyDown)="diagramEvents.keyDown($event)"></ejs-diagram>
+        </div>
+        <ejs-uploader #fileupload id="fileupload" [showFileList]="false" [asyncSettings]='asyncSettings'
+          (success)="onUploadSuccess($event)"></ejs-uploader>
+
+      </div>
+      <div id="shortcutDiv" style="
+            width: 400px;
+            height: 460px;
+            padding: 10px;
+            background-color: #fff7b5;
+            border: 1px solid #fff7b5;
+            position: absolute;
+            margin: 27px;
+            visibility: visible
+          ">
+        <div id="closeIconDiv" style="
+              float: right;
+              width: 22px;
+              height: 22px;
+              border: 1px solid #fff7b5;
+            ">
+          <span class="sf-icon-close" style="font-size: 14px; cursor: pointer"></span>
+        </div>
+        <div><span class="db-html-font-medium">Quick shortcuts</span></div>
+        <div style="padding-top: 10px">
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Tab : </span><span class="db-html-font-normal">Add a subtopic to the
+                left</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Shift + Tab : </span><span class="db-html-font-normal">Add a subtopic to
+                the right</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Enter : </span><span class="db-html-font-normal">Add a new sibling
+                child</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Delete / Backspace : </span><span class="db-html-font-normal">Delete a
+                topic</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Arrow(Up, Down, Left, Right) : </span><span
+                class="db-html-font-normal">Navigate between topics</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">F2 : </span><span class="db-html-font-normal">Edit a topic</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Esc : </span><span class="db-html-font-normal">End text editing</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Ctrl + B : </span><span class="db-html-font-normal">To make text
+                bold</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Ctrl + I : </span><span class="db-html-font-normal">To make text Italic
+              </span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Ctrl + U : </span><span class="db-html-font-normal">Underline the
+                text</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Space : </span><span class="db-html-font-normal">Expand / Collapse the
+                selected node</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">Ctrl + E :</span><span class="db-html-font-normal">Expand / Collapse the
+                whole diagram</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">F8 : </span><span class="db-html-font-normal">To Fit the diagram into
+                the viewport</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li>
+              <span class="db-html-font-medium">F1 : </span><span class="db-html-font-normal">Show/Hide shortcut
+                Key</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class='db-property-editor-container' style="overflow:auto;">
+        <div id="propertyHeader" class="row db-prop-header-text">
+          Properties
+        </div>
+        <div id='mindMapContainer' class="db-mindmap-prop-container">
+          <div class="row db-prop-header-text" style="padding-top: 8px;">
+            Orientation Styles
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-6 org-pattern-parent">
+              <div (click)='utilityMethods.mindmapPatternChange($event)' class="mindmap-pattern-style mindmap-pattern1">
+              </div>
+            </div>
+            <div class="col-xs-6 org-pattern-parent">
+              <div (click)='utilityMethods.mindmapPatternChange($event)' class="mindmap-pattern-style mindmap-pattern2">
+              </div>
+            </div>
+          </div>
+          <div class="row db-prop-row" style="margin-top:5px">
+            <div class="col-xs-6 org-pattern-parent">
+              <div (click)='utilityMethods.mindmapPatternChange($event)' class="mindmap-pattern-style mindmap-pattern3">
+              </div>
+            </div>
+            <div class="col-xs-6 org-pattern-parent">
+              <div (click)='utilityMethods.mindmapPatternChange($event)' class="mindmap-pattern-style mindmap-pattern4">
+              </div>
+            </div>
+          </div>
+          <div class="db-prop-separator">
+          </div>
+          <div class="row db-prop-header-text">
+            MindMap Levels Styles
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-12 db-col-left">
+              <ejs-dropdownlist #mindMapLevels id='mindMapLevels' [fields]='fields' [(value)]='value'
+                [dataSource]='dropDownDataSources.mindmapLevelDatasource'
+                (change)="mindmapLevelChange($event)"></ejs-dropdownlist>
+            </div>
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-8 db-col-right db-prop-text-style" style="padding-top: 5px">
+              <span class="db-prop-text-style db-spacing-text">Shape</span>
+              <div class="e-text-spacing">
+                <ejs-dropdownlist #mindmapShape id='mindmapShape' [fields]='fields' [(value)]='shapeValue'
+                  [dataSource]='dropDownDataSources.mindmapShapeDatasource'
+                  (change)="mindmapShapeChange($event)"></ejs-dropdownlist>
+              </div>
+            </div>
+            <div class="col-xs-3 db-col-left db-prop-text-style" style="padding-top: 5px;margin-left: 10px;">
+              <span class="db-prop-text-style db-spacing-text">Fill Color</span>
+              <div class="db-color-container e-text-spacing">
+                <div class="db-color-input">
+                  <input ejs-colorpicker #mindmapFill mode="Palette" type="color" [showButtons]="false" id="mindmapFill" (change)="fillColorChange($event)" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-3 db-col-left db-prop-text-style" style="padding-top: 5px;">
+              <span class="db-prop-text-style db-spacing-text">Stroke </span>
+              <div class="db-color-container e-text-spacing">
+                <input ejs-colorpicker #mindmapStroke mode="Palette" type="color" [showButtons]="false" id="mindmapStroke" (change)="strokeColorChange($event)" />
+              </div>
+            </div>
+            <div class="col-xs-5 db-col-center db-prop-text-style" style="padding-top: 5px;">
+              <span class="db-prop-text-style db-spacing-text">Type</span>
+              <div class="e-text-spacing">
+                <ejs-dropdownlist #mindmapStrokeStyle id='mindmapStrokeStyle' index="0" popupWidth="160px"
+                  [itemTemplate]='strokeStyleItemTemplate' [fields]='fields' [valueTemplate]='strokeStyleTemplate'
+                  [dataSource]='dropDownDataSources.borderStyles' (change)="mindmapStrokeChange($event)">
+
+                </ejs-dropdownlist>
+
+              </div>
+            </div>
+            <div class="col-xs-4 db-col-right db-prop-text-style" style="padding-top: 5px;">
+              <span class="db-prop-text-style db-spacing-text">Thickness</span>
+              <div class="db-text-input e-text-spacing">
+                <ejs-numerictextbox #mindmapStrokeWidth id="mindmapStrokeWidth" min="0.5" step="0.5" format="###.#"
+                  value='1' (change)="mindmapStrokeWidthChange($event)"></ejs-numerictextbox>
+
+              </div>
+            </div>
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-3 db-col-right db-prop-text-style" style="padding-top: 6px">
+              <span class="db-prop-text-style">Opacity</span>
+            </div>
+            <div class="col-xs-7 db-col-left" style="padding-right:10px">
+              <ejs-slider #mindmapOpacitySlider id='mindmapOpacitySlider' min="0" max="100" step="10" value="100"
+                type="MinRange" (change)="mindmapOpacitySliderChange($event)"></ejs-slider>
+            </div>
+            <div class="col-xs-2 db-col-right">
+              <input type="text" readOnly="true" id="mindmapOpacityText" class="db-readonly-input" value="100%" />
+            </div>
+          </div>
+          <div class="db-prop-separator">
+          </div>
+          <div class="row db-prop-header-text">
+            Connector Type
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-4 db-col-left">
+              <ejs-radiobutton #radio1 id="radio1" checked="true" label="Bezier"
+                (change)="bezierRadioChange($event)"></ejs-radiobutton>
+
+            </div>
+            <div class="col-xs-4 db-col-right">
+              <ejs-radiobutton #radio2 id="radio2" label="Straight"
+                (change)="straightRadioChange($event)"></ejs-radiobutton>
+            </div>
+          </div>
+          <div class="db-prop-separator">
+          </div>
+          <div class="row db-prop-header-text">
+            Text Style
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-8 db-col-left">
+              <ejs-dropdownlist #mindmapFontFamilyList id='mindmapFontFamilyList' [fields]='fields'
+                [(value)]='fontFamilyValue' [dataSource]='dropDownDataSources.fontFamilyList'
+                (change)="mindmapFontFamilyChange($event)"></ejs-dropdownlist>
+            </div>
+            <div class="col-xs-4 db-col-right">
+              <div class="db-text-input">
+                <ejs-numerictextbox #mindmapFontSize id="mindmapFontSize" min="1" step="1" format='###' value='12'
+                  (change)="mindmapFontSizeChange($event)"></ejs-numerictextbox>
+              </div>
+            </div>
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-9 db-col-left">
+              <div id="mindmapTextStyleToolbar"></div>
+              <ejs-toolbar #mindmapTextStyleToolbar id="mindmapTextStyleToolbar" (clicked)="textStyleClicked($event)">
+                <e-items>
+                  <e-item prefixIcon="sf-icon-bold tb-icons" tooltipText='Bold' cssClass="tb-item-start"></e-item>
+                  <e-item prefixIcon="sf-icon-italic tb-icons" tooltipText='Italic' cssClass="tb-item-middle"></e-item>
+                  <e-item prefixIcon="sf-icon-underline tb-icons" tooltipText='Underline' cssClass="tb-item-end" ></e-item>
+                </e-items>
+              </ejs-toolbar>
+            </div>
+            <div class="col-xs-3 db-col-right" id="textColorDiv">
+              <div class="db-color-container">
+                <div class="db-color-input">
+                  <input ejs-colorpicker #mindmapTextColor mode="Palette" [showButtons]="false" type="color" id="mindmapTextColor" (change)="fontColorChange($event)" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-3 db-col-right db-prop-text-style" style="padding-top: 6px">
+              <span class="db-prop-text-style">Opacity</span>
+            </div>
+            <div class="col-xs-7 db-col-left" style="padding-right:10px">
+              <ejs-slider #mindmapTextOpacitySlider id='mindmapTextOpacitySlider' min="0" max="100" step="10"
+                value="100" type="MinRange" (change)="mindmapTextOpacityChange($event)"></ejs-slider>
+            </div>
+            <div class="col-xs-2 db-col-right">
+              <input type="text" id="textOpacityText" class="db-readonly-input" readOnly="true" value="100%" />
+            </div>
+          </div>
+          <div class="db-prop-separator">
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-8 db-col-right db-prop-text-style" style="padding-top: 14px">
+              <span class="db-prop-text-style db-spacing-text">Horizontal Spacing</span>
+            </div>
+            <div class="col-xs-4 db-col-left" style="padding-top: 10px">
+              <div class="db-text-input">
+                <ejs-numerictextbox #horizontalSpacingBtn id="horizontalSpacingBtn" min="50" step="5" max="100"
+                  format='###' value='50' (change)="horizontalSpacingChange($event)"></ejs-numerictextbox>
+              </div>
+            </div>
+            <div class="col-xs-8 db-col-right db-prop-text-style" style="padding-top: 14px">
+              <span class="db-prop-text-style db-spacing-text">Vertical Spacing</span>
+            </div>
+            <div class="col-xs-4 db-col-left" style="padding-top: 10px;">
+              <div class="db-text-input">
+                <ejs-numerictextbox #verticalSpacingBtn id="verticalSpacingBtn" min="50" step="5" max="100" format='###'
+                  value='50' (change)="verticalSpacingChange($event)"></ejs-numerictextbox>
+              </div>
+            </div>
+          </div>
+          <div class="row db-prop-row">
+            <div class="col-xs-6 db-col-right db-prop-text-style" style="padding-top: 10px">
+              <ejs-checkbox #expandable id="expandable" label="Expandable"
+                (change)="expandChange($event)"></ejs-checkbox>
+            </div>
+          </div>
+        </div>
+        <div id='multipleChildPropertyContainer' class="db-node-prop-container" style="display:none ;">
+          <div class="db-node-behaviour-prop" id="dimen">
+            <div class="col-xs-12 db-col-right db-prop-text-style" style="padding-top: 10px">
+              <span class="db-prop-text-style db-spacing-text">Please enter one by one</span>
+            </div>
+            <div class="row db-prop-row" style="padding-top: 10px">
+              <div class="col-xs-12 db-col-left" style="height:65%;margin-top: 5px;">
+                <ejs-textbox #multipleChildText id="multipleChildText" #default rows="2" floatLabelType="Auto" [multiline]="true"
+                  required></ejs-textbox>
+              </div>
+            </div>
+            <div class="row db-prop-row" style="margin-top: 20px;">
+              <div class="col-xs-6 db-col-left" style="height:75%">
+                <button ejs-button #cancel id="cancel" [isPrimary]="true" cssClass="e-outline"
+                  (click)="cancelChild()">Cancel</button>
+              </div>
+              <div class="col-xs-6 db-col-left" style="height:75%">
+                <button ejs-button #add id="addchild" isPrimary="true" (click)="addChildOnClick()">Add</button>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
