@@ -8,7 +8,7 @@ import {
 import { Input, Injectable } from '@angular/core';
 import { isNullOrUndefined } from '@syncfusion/ej2-base';
 import { UtilityMethods } from './utilitymethods';
-import { Toolbar } from '@syncfusion/ej2-angular-navigations';
+import { Toolbar, TreeView } from '@syncfusion/ej2-angular-navigations';
 import { TextBoxComponent } from '@syncfusion/ej2-angular-inputs';
 import { DropDownButtonComponent } from '@syncfusion/ej2-angular-splitbuttons';
 
@@ -18,6 +18,7 @@ export class SelectorViewModel {
 
     public diagram: Diagram;
     public toolbarObj: Toolbar;
+    public treeObj: TreeView;
     public textAreaObj: TextBoxComponent;
     public btnWindowMenu: DropDownButtonComponent;
     public btnZoomIncrement: DropDownButtonComponent;
