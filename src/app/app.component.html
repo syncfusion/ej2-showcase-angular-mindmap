@@ -59,7 +59,7 @@
             <e-item prefixIcon="sf-icon-multiple-child" tooltipText='Add Multiple Child' disabled="false"></e-item>
             <e-item align="right">
               <ng-template #template>
-                <ejs-radiobutton #diagramradio id="diagramradio" checked="true" label="Diagram View"
+                <ejs-radiobutton #diagramradio id="diagramradio" checked label="Diagram View"
                   (change)="diagramradioChange($event)"></ejs-radiobutton>
               </ng-template>
             </e-item>
@@ -92,7 +92,7 @@
     <div class='main-content' role='main'>
       <div id="treeview" class="db-diagram-container" style="overflow:auto;display: none;">
         <div class="control_wrapper">
-          <!-- Initialize TreeView -->
+          
           <ejs-treeview id='tree' #tree [fields]='field' allowEditing="true" (keyPress)="keyPress($event)"
             (nodeEdited)='nodeEdited($event)'></ejs-treeview>
           <ejs-contextmenu #contentmenutree id='contentmenutree' target='#tree' [items]='menuItems'
@@ -101,8 +101,8 @@
         </div>
       </div>
       <div id="overlay" class="db-diagram-container" style="position:absolute ;">
-        <div id="diagramContainerDiv">
-          <ejs-diagram #diagram id="diagram" width="100%" height="600px" [snapSettings]='snapSettings'
+        <div id="diagramContainerDiv" class='db-current-diagram-container'>
+          <ejs-diagram #diagram id="diagram" width="100%" height="100%" [snapSettings]='snapSettings'
             [rulerSettings]="rulerSettings" [layout]="layout" [selectedItems]="selectedItems" [tool]="tool"
             [dataSourceSettings]='dataSourceSettings' [getNodeDefaults]="getNodeDefaults.bind(this)"
             [getConnectorDefaults]="getConnectorDefaults.bind(this)" [getCustomTool]='getCustomTool'

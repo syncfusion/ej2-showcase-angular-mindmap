@@ -61,6 +61,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('contentmenutree')
   public menuObj: ContextMenuComponent;
 
+  @ViewChild('mindmapTextStyleToolbar')
+  public mindmapTextStyleToolbar: ToolbarComponent;
+
 
   /* Global Member Variables */
   public dropDownDataSources: DropDownDataSources = new DropDownDataSources();
@@ -75,6 +78,7 @@ export class AppComponent implements AfterViewInit {
     this.selectedItem.textAreaObj = this.textAreaObj;
     this.selectedItem.btnWindowMenu = this.btnWindowMenu;
     this.selectedItem.btnZoomIncrement = this.btnZoomIncrement;
+    this.selectedItem.treeObj = this.treeObj;
     document.getElementById('closeIconDiv').onclick = this.onHideNodeClick.bind(this);
     document.onmouseover = this.menumouseover.bind(this);
     let element: any = document.getElementsByClassName('e-control e-textbox e-lib');
@@ -223,17 +227,15 @@ export class AppComponent implements AfterViewInit {
     this.diagram.clearSelection();
     this.diagramRadioButton.checked = false;
 
-    this.treeObj.fields = {
+    this.selectedItem.treeObj.fields = {
       dataSource: this.selectedItem.workingData,
       id: 'id',
       text: 'Label',
       parentID: 'parentId',
       hasChildren: 'hasChild',
     };
-    if ((this.treeObj.fields.dataSource as any).length > 0) {
-      // (this.treeObj.fields.dataSource as any) = new DataManager(this.selectedItem.workingData);
-    }
-    this.treeObj.dataBind();
+   
+    this.selectedItem.treeObj.refresh();
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('treeview').style.display = 'block';
     document.getElementById('shortcutDiv').style.visibility = 'hidden';
@@ -741,7 +743,22 @@ export class AppComponent implements AfterViewInit {
 
   public textStyleClicked(args: ClickEventArgs) {
     this.PropertyChange.mindMapPropertyChange({ propertyName: args.item.tooltipText.toLowerCase(), propertyValue: false });
+    if (args.item.cssClass.indexOf('tb-item-selected') === -1) {
+      this.removeSelectedTextToolbarItem();
+      args.item.cssClass += ' tb-item-selected';
+    }
   }
+
+  public removeSelectedTextToolbarItem() {
+    let toolbarEditor = this.mindmapTextStyleToolbar;
+    for (let i = 0; i < toolbarEditor.items.length; i++) {
+        let item = toolbarEditor.items[i];
+        if (item.cssClass.indexOf('tb-item-selected') !== -1) {
+            item.cssClass = item.cssClass.replace(' tb-item-selected', '');
+        }
+    }
+    toolbarEditor.dataBind();
+}
 
 
 
