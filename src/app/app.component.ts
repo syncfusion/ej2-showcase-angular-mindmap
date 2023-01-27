@@ -771,16 +771,19 @@ export class AppComponent implements AfterViewInit {
 
 
 
-  public onUploadSuccess(args: any) {
-    let file1: { [key: string]: Object } = args.file as { [key: string]: Object };
-    let file: Blob = file1.rawFile as Blob;
-    let reader: FileReader = new FileReader();
+  public onUploadSuccess(args:any) {
+    var file1 = args.file;
+    var file = file1.rawFile;
+    var reader = new FileReader();
     reader.readAsText(file);
-    reader.onloadend = this.loadDiagram.bind(this);
+    reader.onloadend = AppComponent.loadDiagram
   }
-
-  public loadDiagram() {
-    //this.diagram.loadDiagram(event.target.result);
+  
+  //Load the diagraming object.
+  public static loadDiagram(event:any) {
+    let diagrm = (document.getElementById('diagram') as any).ej2_instances[0];
+    diagrm.loadDiagram(event.target.result);
+   
   }
 
   // Property panel events
