@@ -45,7 +45,7 @@
     </div>
     <div class='db-toolbar-editor'>
       <div class='db-toolbar-container'>
-        <ejs-toolbar #toolbarEditor id="toolbarEditor" height="28" width="100%" (clicked)="toolbarClick($event)">
+        <ejs-toolbar #toolbarEditor id="toolbarEditor" height="28" width="100%" (created)="toolbarCreated()" (clicked)="toolbarClick($event)">
           <e-items>
             <e-item prefixIcon="sf-icon-undo" tooltipText='Undo' disabled="false"></e-item>
             <e-item prefixIcon="sf-icon-redo" tooltipText='Redo' disabled="false"></e-item>
@@ -59,20 +59,20 @@
             <e-item prefixIcon="sf-icon-multiple-child" tooltipText='Add Multiple Child' disabled="false"></e-item>
             <e-item align="right">
               <ng-template #template>
-                <ejs-radiobutton #diagramradio id="diagramradio" checked label="Diagram View"
+                <ejs-radiobutton #diagramradio id="diagramradio" [checked]="diagramradioChecked" label="Diagram View"
                   (change)="diagramradioChange($event)"></ejs-radiobutton>
               </ng-template>
             </e-item>
             <e-item align="right">
               <ng-template #template>
-                <ejs-radiobutton #treeviewradio id="treeviewradio" label="Text View"
+                <ejs-radiobutton #treeviewradio id="treeviewradio" [checked]="textradioChecked" label="Text View"
                   (change)="treeviewradioChange($event)"></ejs-radiobutton>
               </ng-template>
             </e-item>
             <e-item align="right">
               <ng-template #template>
                 <button ejs-dropdownbutton #btnZoomIncrement id="btnZoomIncrement" cssClass='db-dropdown-menu'
-                  [items]='dropDownDataSources.zoomMenuItems' content="100%" (select)="onZoomChange($event)">
+                  [items]='dropDownDataSources.zoomMenuItems' [content]="zoomContent()" (select)="onZoomChange($event)">
                 </button>
               </ng-template>
             </e-item>
@@ -464,3 +464,102 @@
     </div>
   </div>
 </div>
+
+<ejs-dialog id="exportDialog" #exportDialog width='400px' header='Export Diagram' [target]='dlgTarget' isModal='true' [animationSettings]='dialogAnimationSettings'
+    [buttons]='exportingButtons' [visible]='dialogVisibility' showCloseIcon='true'>
+    <ng-template #content>
+        <div id="exportDialogContent">
+            <div class="row">
+                <div class="row">
+                    File Name
+                </div>
+                <div class="row db-dialog-child-prop-row">
+                    <input type="text" id="exportfileName" [value]="utilityMethods.fileName()">
+                </div>
+            </div>
+            <div class="row db-dialog-prop-row">
+                <div class="col-xs-6 db-col-left">
+                    <div class="row">
+                        Format
+                    </div>
+                    <div class="row db-dialog-child-prop-row">
+                        <ejs-dropdownlist id="exportFormat" [(value)]="this.selectedItem.exportSettings.format" [dataSource]='dropDownDataSources.fileFormats'
+                            [fields]='fields'>
+                        </ejs-dropdownlist>
+                    </div>
+                </div>
+                <div class="col-xs-6 db-col-right">
+                    <div class="row">
+                        Region
+                    </div>
+                    <div class="row db-dialog-child-prop-row">
+                        <ejs-dropdownlist id="exportRegion" [(value)]="this.selectedItem.exportSettings.region" [dataSource]='dropDownDataSources.diagramRegions'
+                            [fields]='fields'>
+                        </ejs-dropdownlist>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+</ejs-dialog>
+
+<ejs-dialog id="printDialog" #printDialog width='335px' height="360px" header='Print Diagram' [target]='dlgTarget' isModal='true' [animationSettings]='dialogAnimationSettings'
+    [buttons]='printingButtons' [visible]='dialogVisibility' showCloseIcon='true'>
+    <ng-template #content>
+        <div id="printDialogContent">
+            <div class="row">
+                <div class="row">
+                    Region
+                </div>
+                <div class="row db-dialog-child-prop-row">
+                    <ejs-dropdownlist [(value)]="this.selectedItem.printSettings.region" [dataSource]='dropDownDataSources.diagramRegions' [fields]='fields'>
+                    </ejs-dropdownlist>
+                </div>
+            </div>
+            <div class="row db-dialog-prop-row">
+                <div class="row">
+                    Print Settings
+                </div>
+                <div class="row db-dialog-child-prop-row">
+                    <ejs-dropdownlist [dataSource]='dropDownDataSources.paperList' [fields]='fields' [(value)]='this.selectedItem.printSettings.paperSize'>
+                    </ejs-dropdownlist>
+                </div>
+            </div>
+            <div id="printCustomSize" class="row db-dialog-prop-row" style="display:none; height: 28px;">
+                <div class="col-xs-6 db-col-left">
+                    <div class="db-text-container">
+                        <div class="db-text">
+                            <span>W</span>
+                        </div>
+                        <div class="db-text-input">
+                            <ejs-numerictextbox id="printPageWidth" min="100" step="1" format="n0" [(value)]="selectedItem.printSettings.pageWidth"></ejs-numerictextbox>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-6 db-col-right">
+                    <div class="db-text-container">
+                        <div class="db-text">
+                            <span>H</span>
+                        </div>
+                        <div class="db-text-input">
+                            <ejs-numerictextbox id="printPageHeight" min="100" step="1" format="n0" [(value)]="selectedItem.printSettings.pageHeight"></ejs-numerictextbox>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="printOrientation" class="row db-dialog-prop-row" style="height: 28px; padding: 5px 0px;">
+                <div class="col-xs-3 db-prop-col-style" style="margin-right: 8px;">
+                    <ejs-radiobutton id='printPortrait' label="Portrait" name="printSettings" [checked]="true" >
+                    </ejs-radiobutton>
+                </div>
+                <div class="col-xs-3 db-prop-col-style">
+                    <ejs-radiobutton id='printLandscape' label="Landscape" name="printSettings" >
+                    </ejs-radiobutton>
+                </div>
+            </div>
+            <div class="row db-dialog-prop-row" style="margin-top: 16px">
+                <ejs-checkbox id='printMultiplePage' label="Scale to fit 1 page" [(checked)]="selectedItem.printSettings.multiplePage"></ejs-checkbox>
+            </div>
+        </div>
+    </ng-template>
+</ejs-dialog>

@@ -306,6 +306,7 @@ export class DiagramClientSideEvents {
             ]
         };
         diagram.dataBind();
+        this.selectedItem.diagram.select([this.selectedItem.diagram.nodes[0]]);
     }
 
     public selectionChange(arg: ISelectionChangeEventArgs): void {
@@ -353,6 +354,9 @@ export class DiagramClientSideEvents {
         diagram.historyManager.undoStack.length > 0 ? this.selectedItem.toolbarObj.items[0].disabled = false : this.selectedItem.toolbarObj.items[0].disabled = true
         diagram.historyManager.redoStack.length > 0 ? this.selectedItem.toolbarObj.items[1].disabled = false : this.selectedItem.toolbarObj.items[1].disabled = true
     };
+
+    
+
     public keyDown(args: IKeyEventArgs) {
         let diagram: Diagram = this.selectedItem.diagram;
         if (args.key === "Enter" && args.keyModifiers === 0 && (diagram.diagramActions & DiagramAction.TextEdit)) {
@@ -369,8 +373,9 @@ export class DiagramClientSideEvents {
     }
 
     public scrollChange(args: IScrollChangeEventArgs) {
-        var zoomCurrentValue = this.selectedItem.btnZoomIncrement;
+        var zoomCurrentValue: any = document.getElementById("btnZoomIncrement");
         if (zoomCurrentValue && (zoomCurrentValue as any).ej2_instances) {
+      
             zoomCurrentValue = (document.getElementById("btnZoomIncrement") as any).ej2_instances[0];
             zoomCurrentValue.content = Math.round(this.selectedItem.diagram.scrollSettings.currentZoom * 100) + ' %';
         }

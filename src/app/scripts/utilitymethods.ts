@@ -96,7 +96,7 @@ export class UtilityMethods {
             diagram.select([node1]);
         }
 
-        diagram.dataBind();
+       // diagram.dataBind();
     }
 
     public getMindMapShape(parentNode: NodeModel) {
@@ -356,7 +356,7 @@ export class UtilityMethods {
                     }
                 }
             }
-            diagram.dataBind();
+           // diagram.dataBind();
         }
         for (let i = 0; i < diagram.connectors.length; i++) {
             let connector = diagram.connectors[i];
@@ -382,7 +382,7 @@ export class UtilityMethods {
                     this.selectedItem.templateType = 'template3';
                     break;
             }
-            diagram.dataBind();
+           // diagram.dataBind();
         }
         diagram.historyManager.endGroupAction();
         diagram.doLayout();
@@ -701,7 +701,7 @@ export class UtilityMethods {
                 item.cssClass = item.cssClass.replace(' tb-item-selected', '');
             }
         }
-        toolbarEditor.dataBind();
+        //toolbarEditor.dataBind();
     }
 
     public getOrientation() {
@@ -753,10 +753,16 @@ export class UtilityMethods {
                 this.download(diagram.saveDiagram());
                 break;
             case 'print':
-              //  printDialog.show();
+                this.selectedItem.printSettings.pageHeight = this.selectedItem.diagram.pageSettings.height;
+                this.selectedItem.printSettings.pageWidth = this.selectedItem.diagram.pageSettings.width;
+                this.selectedItem.printSettings.paperSize = "A4";
+                this.selectedItem.printSettings.isPortrait = this.selectedItem.diagram.pageSettings.orientation === 'Portrait'? true:false
+                this.selectedItem.printSettings.isLandscape = this.selectedItem.diagram.pageSettings.orientation === 'Landscape'? true:false
+                this.selectedItem.printSettings.multiplePage = this.selectedItem.diagram.pageSettings.multiplePage;
+                this.selectedItem.printDialog.show();
                 break;
             case 'export':
-               // exportDialog.show();
+                this.selectedItem.exportDialog.show();
                 break;
             case 'fittoscreen':
                 diagram.fitToPage({ mode: 'Page', region: 'Content', margin: { left: 0, top: 0, right: 0, bottom: 0 } });
@@ -802,7 +808,7 @@ export class UtilityMethods {
                // this.executeEditMenu(diagram, commandType);
                 break;
         }
-        diagram.dataBind();
+      //  diagram.dataBind();
     };
 
     public hideElements(elementType: string, diagram: Diagram) {
@@ -816,6 +822,45 @@ export class UtilityMethods {
         if (diagram) {
             diagram.updateViewPort();
         }
+    }
+
+    public getPaperSize(paperName:string){
+        let paperSize: PaperSize = new PaperSize();
+        switch (paperName) {
+            case 'Letter':
+                paperSize.pageWidth = 816;
+                paperSize.pageHeight = 1056;
+                break;
+            case 'Legal':
+                paperSize.pageWidth = 816;
+                paperSize.pageHeight = 1344;
+                break;
+            case 'Tabloid':
+                paperSize.pageWidth = 1056;
+                paperSize.pageHeight = 1632;
+                break;
+            case 'A3':
+                paperSize.pageWidth = 1122;
+                paperSize.pageHeight = 1587;
+                break;
+            case 'A4':
+                paperSize.pageWidth = 793;
+                paperSize.pageHeight = 1122;
+                break;
+            case 'A5':
+                paperSize.pageWidth = 559;
+                paperSize.pageHeight = 793;
+                break;
+            case 'A6':
+                paperSize.pageWidth = 396;
+                paperSize.pageHeight = 559;
+                break;
+        }
+        return paperSize;
+    };
+
+    public fileName(){
+        return document.getElementById('diagramName').innerHTML;
     }
 
 }
