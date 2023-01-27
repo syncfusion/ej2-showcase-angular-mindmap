@@ -517,7 +517,7 @@ export class UtilityMethods {
                 fill: node.style.fill,
                 branch: orientation_3,
                 strokeColor: node.style.strokeColor,
-                parentId: (selectedNode.data as any).id,
+                parentId: (selectedNode.data as any).parentId,
                 level: (node.addInfo as any).level,
                 orientation: (node.addInfo as any).orientation,
                 hasChild: false,
@@ -529,14 +529,14 @@ export class UtilityMethods {
                 strokeColor: node.style.strokeColor,
                 orientation: (node.addInfo as any).orientation,
                 branch: orientation_3,
-                parentId: (selectedNode.data as any).id,
+                parentId: (selectedNode.data as any).parentId,
                 level: (node.addInfo as any).level,
                 hasChild: false,
             };
             let tempData = this.selectedItem.workingData.filter(
                 (a: any) => a.id === (selectedNode.data as any).id
             );
-            tempData[0].hasChild = true;
+            tempData[0].hasChild = (selectedNode.data as any).hasChild;
             this.selectedItem.workingData.push(nodeData);
             diagram.add(node);
             let connector = this.setConnectorDefault(diagram, orientation_3, mindmapData.connector, connector1.sourceID, node.id);
