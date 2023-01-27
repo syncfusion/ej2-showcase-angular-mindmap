@@ -96,7 +96,7 @@ export class UtilityMethods {
             diagram.select([node1]);
         }
 
-        diagram.dataBind();
+       // diagram.dataBind();
     }
 
     public getMindMapShape(parentNode: NodeModel) {
@@ -356,7 +356,7 @@ export class UtilityMethods {
                     }
                 }
             }
-            diagram.dataBind();
+           // diagram.dataBind();
         }
         for (let i = 0; i < diagram.connectors.length; i++) {
             let connector = diagram.connectors[i];
@@ -382,7 +382,7 @@ export class UtilityMethods {
                     this.selectedItem.templateType = 'template3';
                     break;
             }
-            diagram.dataBind();
+           // diagram.dataBind();
         }
         diagram.historyManager.endGroupAction();
         diagram.doLayout();
@@ -517,7 +517,7 @@ export class UtilityMethods {
                 fill: node.style.fill,
                 branch: orientation_3,
                 strokeColor: node.style.strokeColor,
-                parentId: (selectedNode.data as any).id,
+                parentId: (selectedNode.data as any).parentId,
                 level: (node.addInfo as any).level,
                 orientation: (node.addInfo as any).orientation,
                 hasChild: false,
@@ -529,14 +529,14 @@ export class UtilityMethods {
                 strokeColor: node.style.strokeColor,
                 orientation: (node.addInfo as any).orientation,
                 branch: orientation_3,
-                parentId: (selectedNode.data as any).id,
+                parentId: (selectedNode.data as any).parentId,
                 level: (node.addInfo as any).level,
                 hasChild: false,
             };
             let tempData = this.selectedItem.workingData.filter(
                 (a: any) => a.id === (selectedNode.data as any).id
             );
-            tempData[0].hasChild = true;
+            tempData[0].hasChild = (selectedNode.data as any).hasChild;
             this.selectedItem.workingData.push(nodeData);
             diagram.add(node);
             let connector = this.setConnectorDefault(diagram, orientation_3, mindmapData.connector, connector1.sourceID, node.id);
@@ -701,7 +701,7 @@ export class UtilityMethods {
                 item.cssClass = item.cssClass.replace(' tb-item-selected', '');
             }
         }
-        toolbarEditor.dataBind();
+        //toolbarEditor.dataBind();
     }
 
     public getOrientation() {
@@ -753,10 +753,16 @@ export class UtilityMethods {
                 this.download(diagram.saveDiagram());
                 break;
             case 'print':
-              //  printDialog.show();
+                this.selectedItem.printSettings.pageHeight = this.selectedItem.diagram.pageSettings.height;
+                this.selectedItem.printSettings.pageWidth = this.selectedItem.diagram.pageSettings.width;
+                this.selectedItem.printSettings.paperSize = "A4";
+                this.selectedItem.printSettings.isPortrait = this.selectedItem.diagram.pageSettings.orientation === 'Portrait'? true:false
+                this.selectedItem.printSettings.isLandscape = this.selectedItem.diagram.pageSettings.orientation === 'Landscape'? true:false
+                this.selectedItem.printSettings.multiplePage = this.selectedItem.diagram.pageSettings.multiplePage;
+                this.selectedItem.printDialog.show();
                 break;
             case 'export':
-               // exportDialog.show();
+                this.selectedItem.exportDialog.show();
                 break;
             case 'fittoscreen':
                 diagram.fitToPage({ mode: 'Page', region: 'Content', margin: { left: 0, top: 0, right: 0, bottom: 0 } });
@@ -799,11 +805,39 @@ export class UtilityMethods {
                 diagram.pageSettings.multiplePage = !diagram.pageSettings.multiplePage;
                 break;
             default:
-               // this.executeEditMenu(diagram, commandType);
+                this.executeEditMenu(diagram, commandType);
                 break;
         }
-        diagram.dataBind();
+      //  diagram.dataBind();
     };
+
+    public executeEditMenu(diagram: Diagram, commandType: string) {
+        var key = '';
+        switch (commandType.toLowerCase()) {
+            case 'undo':
+                diagram.undo();
+                diagram.doLayout();
+                break;
+            case 'redo':
+                diagram.redo();
+                break;
+            case 'cut':
+                diagram.cut();
+                break;
+            case 'copy':
+                diagram.copy();
+                break;
+            case 'paste':
+                diagram.paste();
+                break;
+            case 'delete':
+                this.removeChild();
+                break;
+            case 'selectall':
+                diagram.selectAll();
+                break;
+        }
+    }
 
     public hideElements(elementType: string, diagram: Diagram) {
         var diagramContainer = document.getElementsByClassName('diagrambuilder-container')[0];
@@ -816,6 +850,45 @@ export class UtilityMethods {
         if (diagram) {
             diagram.updateViewPort();
         }
+    }
+
+    public getPaperSize(paperName:string){
+        let paperSize: PaperSize = new PaperSize();
+        switch (paperName) {
+            case 'Letter':
+                paperSize.pageWidth = 816;
+                paperSize.pageHeight = 1056;
+                break;
+            case 'Legal':
+                paperSize.pageWidth = 816;
+                paperSize.pageHeight = 1344;
+                break;
+            case 'Tabloid':
+                paperSize.pageWidth = 1056;
+                paperSize.pageHeight = 1632;
+                break;
+            case 'A3':
+                paperSize.pageWidth = 1122;
+                paperSize.pageHeight = 1587;
+                break;
+            case 'A4':
+                paperSize.pageWidth = 793;
+                paperSize.pageHeight = 1122;
+                break;
+            case 'A5':
+                paperSize.pageWidth = 559;
+                paperSize.pageHeight = 793;
+                break;
+            case 'A6':
+                paperSize.pageWidth = 396;
+                paperSize.pageHeight = 559;
+                break;
+        }
+        return paperSize;
+    };
+
+    public fileName(){
+        return document.getElementById('diagramName').innerHTML;
     }
 
 }

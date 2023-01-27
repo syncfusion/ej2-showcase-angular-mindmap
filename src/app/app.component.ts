@@ -1,11 +1,11 @@
 import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core';
 import { DiagramComponent, MindMapService } from '@syncfusion/ej2-angular-diagrams';
-import { BasicShapeModel, ConnectorConstraints, ConnectorModel, DataBinding, Diagram, DiagramTools, HierarchicalTree, MindMap, MouseEventArgs, Node, NodeConstraints, NodeModel, PointPort, PointPortModel, PortVisibility, RulerSettingsModel, SelectorConstraints, SelectorModel, SnapConstraints, SnapSettingsModel, ToolBase, UserHandleModel } from '@syncfusion/ej2-diagrams';
+import { BasicShapeModel, ConnectorConstraints, ConnectorModel, DataBinding, Diagram, DiagramRegions, DiagramTools, FileFormats, HierarchicalTree, MindMap, MouseEventArgs, Node, NodeConstraints, NodeModel, PointPort, PointPortModel, PortVisibility, RulerSettingsModel, SelectorConstraints, SelectorModel, SnapConstraints, SnapSettingsModel, ToolBase, UserHandleModel } from '@syncfusion/ej2-diagrams';
 import { DropDownDataSources } from './scripts/dropdowndatasource';
 import { DataManager } from '@syncfusion/ej2-data';
 import { SelectorViewModel } from './scripts/selector';
 import { DiagramClientSideEvents } from './scripts/events';
-import { UtilityMethods } from './scripts/utilitymethods';
+import { PaperSize, UtilityMethods } from './scripts/utilitymethods';
 import { ChangeArgs, RadioButtonComponent } from '@syncfusion/ej2-angular-buttons';
 import { ChangeEventArgs as DropDownChangeEventArgs, DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import { PropertyChange } from './scripts/properties';
@@ -14,6 +14,7 @@ import { ChangeEventArgs as CheckBoxChangeEventArgs, ChangeArgs as ButtonChangeA
 import { DropDownButtonComponent, MenuEventArgs } from '@syncfusion/ej2-angular-splitbuttons';
 import { BeforeOpenCloseMenuEventArgs, ClickEventArgs, ContextMenuComponent, NodeEditEventArgs, NodeKeyPressEventArgs, ToolbarComponent, TreeViewComponent } from '@syncfusion/ej2-angular-navigations';
 import { closest } from '@syncfusion/ej2-base';
+import { AnimationSettingsModel, DialogComponent } from '@syncfusion/ej2-angular-popups';
 
 Diagram.Inject(DataBinding, MindMap, HierarchicalTree);
 
@@ -27,6 +28,12 @@ export class AppComponent implements AfterViewInit {
 
   @ViewChild('diagram')
   public diagram: DiagramComponent;
+
+  @ViewChild('exportDialog')
+  public exportDialog: DialogComponent;
+
+  @ViewChild('printDialog')
+  public printDialog: DialogComponent;
 
   @ViewChild('radio1')
   public bezierRadioButton: RadioButtonComponent;
@@ -64,6 +71,10 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('mindmapTextStyleToolbar')
   public mindmapTextStyleToolbar: ToolbarComponent;
 
+  public diagramradioChecked: boolean = true;
+
+  public textradioChecked: boolean = false;
+
 
   /* Global Member Variables */
   public dropDownDataSources: DropDownDataSources = new DropDownDataSources();
@@ -71,6 +82,11 @@ export class AppComponent implements AfterViewInit {
   public diagramEvents: DiagramClientSideEvents = new DiagramClientSideEvents(this.selectedItem);
   public utilityMethods: UtilityMethods = new UtilityMethods(this.selectedItem);
   public PropertyChange: PropertyChange = new PropertyChange(this.selectedItem);
+  public printingButtons: Object[] = this.getDialogButtons('print');
+  public exportingButtons: Object[] = this.getDialogButtons('export');
+  public dialogVisibility: boolean = false;
+  public dialogAnimationSettings: AnimationSettingsModel = { effect: 'None' };
+  public dlgTarget: HTMLElement = document.body;
 
   ngAfterViewInit() {
     this.selectedItem.diagram = this.diagram;
@@ -79,6 +95,9 @@ export class AppComponent implements AfterViewInit {
     this.selectedItem.btnWindowMenu = this.btnWindowMenu;
     this.selectedItem.btnZoomIncrement = this.btnZoomIncrement;
     this.selectedItem.treeObj = this.treeObj;
+    this.selectedItem.exportDialog = this.exportDialog;
+    this.selectedItem.printDialog = this.printDialog;
+    //this.diagramRadioButton.checked = true;
     document.getElementById('closeIconDiv').onclick = this.onHideNodeClick.bind(this);
     document.onmouseover = this.menumouseover.bind(this);
     let element: any = document.getElementsByClassName('e-control e-textbox e-lib');
@@ -212,21 +231,101 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
+  public getDialogButtons(dialogType: string): Object[] {
+    let buttons: Object[] = [];
+    switch (dialogType) {
+      case 'export':
+        buttons.push({
+          click: this.btnExportClick.bind(this), buttonModel: { content: 'Export', cssClass: 'e-flat e-db-primary', isPrimary: true }
+        });
+        break;
+      case 'print':
+        buttons.push({
+          click: this.btnPrintClick.bind(this), buttonModel: { content: 'Print', cssClass: 'e-flat e-db-primary', isPrimary: true }
+        });
+        break;
+
+    }
+    buttons.push({
+      click: this.btnCancelClick.bind(this), buttonModel: { content: 'Cancel', cssClass: 'e-flat', isPrimary: true }
+    });
+    return buttons;
+  }
+
+  private btnExportClick(): void {
+    let diagram: Diagram = this.selectedItem.diagram;
+    diagram.exportDiagram({
+      fileName: document.getElementById('diagramName').innerHTML,
+      format: this.selectedItem.exportSettings.format as FileFormats,
+      region: this.selectedItem.exportSettings.region as DiagramRegions
+    });
+    this.exportDialog.hide();
+  };
+  private btnPrintClick(): void {
+    let pageWidth: number = this.selectedItem.printSettings.pageWidth;
+    let pageHeight: number = this.selectedItem.printSettings.pageHeight;
+    let paperSize: PaperSize = this.selectedItem.utilityMethods.getPaperSize(this.selectedItem.printSettings.paperSize);
+    if (paperSize.pageHeight && paperSize.pageWidth) {
+      pageWidth = paperSize.pageWidth;
+      pageHeight = paperSize.pageHeight;
+    }
+    if (this.selectedItem.pageSettings.isPortrait) {
+      if (pageWidth > pageHeight) {
+        let temp: number = pageWidth;
+        pageWidth = pageHeight;
+        pageHeight = temp;
+      }
+    } else {
+      if (pageHeight > pageWidth) {
+        let temp: number = pageHeight;
+        pageHeight = pageWidth;
+        pageWidth = temp;
+      }
+    }
+    let diagram: Diagram = this.selectedItem.diagram;
+    diagram.print({
+      region: this.selectedItem.printSettings.region as DiagramRegions, pageHeight: pageHeight, pageWidth: pageWidth,
+      multiplePage: !this.selectedItem.printSettings.multiplePage,
+      pageOrientation: this.selectedItem.printSettings.isPortrait ? 'Portrait' : 'Landscape'
+    });
+    this.printDialog.hide();
+  }
+  private btnCancelClick(args: MouseEvent): void {
+    let ss: HTMLElement = args.target as HTMLElement;
+    let key: string = ss.offsetParent.id;
+    switch (key) {
+      case 'exportDialog':
+        this.exportDialog.hide();
+        break;
+      case 'printDialog':
+        this.printDialog.hide();
+        break;
+    }
+  };
+
+  public zoomContent() {
+    return Math.round(this.diagram.scrollSettings.currentZoom * 100) + ' %'
+  }
+
   public diagramradioChange(args: any) {
     this.textRadioButton.checked = false;
+    this.diagramradioChecked = true;
+    this.textradioChecked = false;
     this.diagram.dataSourceSettings.dataSource = new DataManager(this.selectedItem.workingData);
     this.diagram.dataBind();
     document.getElementById('overlay').style.display = 'block';
     document.getElementById('treeview').style.display = 'none';
     document.getElementById('shortcutDiv').style.visibility = 'visible';
     this.btnWindowMenu.items[2].iconCss = document.getElementById('shortcutDiv').style.visibility === "hidden" ? '' : 'sf-icon-check-tick';
-    this.diagram.fitToPage();
+    // this.diagram.fitToPage();
+    this.diagram.updateViewPort();
   }
 
   public treeviewradioChange(args: any) {
-    this.diagram.clearSelection();
     this.diagramRadioButton.checked = false;
-
+    this.diagramradioChecked = false;
+    this.textradioChecked = true;
+    this.diagram.clearSelection();
     this.selectedItem.treeObj.fields = {
       dataSource: this.selectedItem.workingData,
       id: 'id',
@@ -234,7 +333,7 @@ export class AppComponent implements AfterViewInit {
       parentID: 'parentId',
       hasChildren: 'hasChild',
     };
-   
+
     this.selectedItem.treeObj.refresh();
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('treeview').style.display = 'block';
@@ -294,7 +393,7 @@ export class AppComponent implements AfterViewInit {
   public layout: Object = {
     type: 'MindMap', horizontalSpacing: 50, verticalSpacing: 50,
     getBranch: (node: NodeModel, nodes: NodeModel[]) => {
-      if (node.addInfo) {
+      if (node && node.addInfo) {
         let addInfo: any = node.addInfo;
         return addInfo.orientation.toString();
       }
@@ -417,7 +516,7 @@ export class AppComponent implements AfterViewInit {
       connector.targetPortID = targetNode.ports[0].id;
       connector.style = { strokeWidth: 1, strokeColor: '#3498DB' };
     }
-    connector.constraints &= ConnectorConstraints.Select;
+    connector.constraints = ConnectorConstraints.Default & ~ConnectorConstraints.Select;
     return connector;
   }
 
@@ -426,11 +525,20 @@ export class AppComponent implements AfterViewInit {
   public getTool(action: string): ToolBase {
     let tool: ToolBase;
     if (action === 'leftHandle') {
-      this.utilityMethods.addNode('Right');
+      let leftTool: LeftExtendTool = new LeftExtendTool(this.diagram.commandHandler);
+      leftTool.diagram = this.diagram;
+      leftTool.selectedItem = this.selectedItem;
+      return leftTool;
     } else if (action === 'rightHandle') {
-      this.utilityMethods.addNode('Left');
+      let rightTool: RightExtendTool = new RightExtendTool(this.diagram.commandHandler);
+      rightTool.diagram = this.diagram;
+      rightTool.selectedItem = this.selectedItem;
+      return rightTool;
     } else if (action === 'devare') {
-      this.utilityMethods.removeChild();
+      let deleteTool: DeleteClick = new DeleteClick(this.diagram.commandHandler);
+      deleteTool.diagram = this.diagram;
+      deleteTool.selectedItem = this.selectedItem;
+      return deleteTool;
     }
     return tool;
   }
@@ -625,13 +733,17 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
+  public toolbarCreated() {
+    console.log('toolbar created');
+  }
+
   private buttonInstance: any;
   public menumouseover(args: any) {
     let target = args.target;
     if (target && (target.className === 'e-control e-dropdown-btn e-lib e-btn db-dropdown-menu' ||
       target.className === 'e-control e-dropdown-btn e-lib e-btn db-dropdown-menu e-ddb-active')) {
       if (this.buttonInstance && this.buttonInstance.id !== target.id) {
-        if (this.buttonInstance.getPopUpElement().classList.contains('e-popup-open')) {
+        if (this.buttonInstance.getPopUpElement() && this.buttonInstance.getPopUpElement().classList.contains('e-popup-open')) {
           this.buttonInstance.toggle();
           let buttonElement = document.getElementById(this.buttonInstance.element.id);
           buttonElement.classList.remove('e-btn-hover');
@@ -639,14 +751,14 @@ export class AppComponent implements AfterViewInit {
       }
       let button1 = target.ej2_instances[0];
       this.buttonInstance = button1;
-      if (button1.getPopUpElement().classList.contains('e-popup-close')) {
+      if (button1.getPopUpElement() && button1.getPopUpElement().classList.contains('e-popup-close')) {
         button1.toggle();
         let buttonElement1 = document.getElementById(this.buttonInstance.element.id);
         buttonElement1.classList.add('e-btn-hover');
       }
     } else {
       if (closest(target, '.e-dropdown-popup') === null && closest(target, '.e-dropdown-btn') === null) {
-        if (this.buttonInstance && this.buttonInstance.getPopUpElement().classList.contains('e-popup-open')) {
+        if (this.buttonInstance && this.buttonInstance.getPopUpElement() && this.buttonInstance.getPopUpElement().classList.contains('e-popup-open')) {
           this.buttonInstance.toggle();
           let buttonElement2 = document.getElementById(this.buttonInstance.element.id);
           buttonElement2.classList.remove('e-btn-hover');
@@ -752,16 +864,82 @@ export class AppComponent implements AfterViewInit {
   public removeSelectedTextToolbarItem() {
     let toolbarEditor = this.mindmapTextStyleToolbar;
     for (let i = 0; i < toolbarEditor.items.length; i++) {
-        let item = toolbarEditor.items[i];
-        if (item.cssClass.indexOf('tb-item-selected') !== -1) {
-            item.cssClass = item.cssClass.replace(' tb-item-selected', '');
-        }
+      let item = toolbarEditor.items[i];
+      if (item.cssClass.indexOf('tb-item-selected') !== -1) {
+        item.cssClass = item.cssClass.replace(' tb-item-selected', '');
+      }
     }
     toolbarEditor.dataBind();
+  }
+
+
+
+
 }
 
+class LeftExtendTool extends ToolBase {
+  public diagram: Diagram = null;
+  public selectedItem: SelectorViewModel = null;
+  //mouseDown event
+  public mouseDown(args: MouseEventArgs): void {
+    super.mouseDown(args);
+    this.inAction = true;
+  }
+  //mouseUp event
+  public mouseUp(args: MouseEventArgs): void {
+    if (this.inAction) {
+      let selectedObject: any = this.commandHandler.getSelectedObject();
+      if (selectedObject[0]) {
+        if (selectedObject[0] instanceof Node) {
+          this.selectedItem.utilityMethods.addNode('Right');
+        }
+      }
+    }
+  }
+}
 
+class RightExtendTool extends ToolBase {
+  public diagram: Diagram = null;
+  public selectedItem: SelectorViewModel = null;
+  //mouseDown event
+  public mouseDown(args: MouseEventArgs): void {
+    super.mouseDown(args);
+    this.inAction = true;
+  }
+  //mouseUp event
+  public mouseUp(args: MouseEventArgs): void {
+    if (this.inAction) {
+      let selectedObject: any = this.commandHandler.getSelectedObject();
+      if (selectedObject[0]) {
+        if (selectedObject[0] instanceof Node) {
+          this.selectedItem.utilityMethods.addNode('Left');
+        }
+      }
+    }
+  }
+}
 
+class DeleteClick extends ToolBase {
+  public diagram: Diagram = null;
+  public selectedItem: SelectorViewModel = null;
+  //mouseDown event
+  public mouseDown(args: MouseEventArgs): void {
+    super.mouseDown(args);
+    this.inAction = true;
+  }
+  //mouseup event
+  public mouseUp(args: MouseEventArgs): void {
+    if (this.inAction) {
+      let selectedObject: any = this.commandHandler.getSelectedObject();
+      if (selectedObject[0]) {
+        if (selectedObject[0] instanceof Node) {
+          let node: Node = selectedObject[0] as Node;
+          this.selectedItem.utilityMethods.removeSubChild(node);
+        }
+        this.diagram.doLayout();
+      }
+    }
+  }
 
 }
 
