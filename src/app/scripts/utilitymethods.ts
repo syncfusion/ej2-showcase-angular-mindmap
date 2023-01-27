@@ -805,11 +805,39 @@ export class UtilityMethods {
                 diagram.pageSettings.multiplePage = !diagram.pageSettings.multiplePage;
                 break;
             default:
-               // this.executeEditMenu(diagram, commandType);
+                this.executeEditMenu(diagram, commandType);
                 break;
         }
       //  diagram.dataBind();
     };
+
+    public executeEditMenu(diagram: Diagram, commandType: string) {
+        var key = '';
+        switch (commandType.toLowerCase()) {
+            case 'undo':
+                diagram.undo();
+                diagram.doLayout();
+                break;
+            case 'redo':
+                diagram.redo();
+                break;
+            case 'cut':
+                diagram.cut();
+                break;
+            case 'copy':
+                diagram.copy();
+                break;
+            case 'paste':
+                diagram.paste();
+                break;
+            case 'delete':
+                this.removeChild();
+                break;
+            case 'selectall':
+                diagram.selectAll();
+                break;
+        }
+    }
 
     public hideElements(elementType: string, diagram: Diagram) {
         var diagramContainer = document.getElementsByClassName('diagrambuilder-container')[0];
