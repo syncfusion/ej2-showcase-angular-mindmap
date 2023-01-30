@@ -96,7 +96,7 @@ export class UtilityMethods {
             diagram.select([node1]);
         }
 
-       // diagram.dataBind();
+        // diagram.dataBind();
     }
 
     public getMindMapShape(parentNode: NodeModel) {
@@ -269,11 +269,11 @@ export class UtilityMethods {
         let diagram = this.selectedItem.diagram;
         for (let i = 0; i < diagram.selectedItems.userHandles.length; i++) {
             let handle = diagram.selectedItems.userHandles[i];
-            if (handle.name === 'delete' && change === 'leftHandle') {
-                this.applyHandle(handle, 'Left', 0.5, { top: 10, bottom: 0, left: 0, right: 10 }, 'Left', 'Top');
+            if (handle.name === 'devare' && change === 'leftHandle') {
+                this.applyHandle(handle, 'Left', 1, { top: 0, bottom: 0, left: 0, right: 10 }, 'Left', 'Top');
 
-            } else if (handle.name === 'delete' && change === 'rightHandle') {
-                this.applyHandle(handle, 'Right', 0.5, { top: 10, bottom: 0, left: 10, right: 0 }, 'Right', 'Top');
+            } else if (handle.name === 'devare' && change === 'rightHandle') {
+                this.applyHandle(handle, 'Right', 1, { top: 0, bottom: 0, left: 10, right: 0 }, 'Right', 'Top');
             }
         }
     }
@@ -286,13 +286,20 @@ export class UtilityMethods {
         handle.verticalAlignment = valignment;
     }
 
-    public mindmapPatternChange(args: any) {
+    public mindmapPatternChange(args: any, canUpdate?: any) {
         let diagram = this.selectedItem.diagram;
         let target = args.target;
         this.selectedItem.mindMapPatternTarget = args;
         diagram.historyManager.startGroupAction();
-        for (let i = 0; i < diagram.nodes.length; i++) {
-            let node = diagram.nodes[i];
+        var nodes = canUpdate ? diagram.selectedItems.nodes : diagram.nodes;
+        if (canUpdate && diagram.selectedItems.nodes.length > 0) {
+            nodes = diagram.selectedItems.nodes;
+        } else {
+            nodes = diagram.nodes;
+        }
+
+        for (let i = 0; i < nodes.length; i++) {
+            let node = nodes[i];
             if (node.id !== 'textNode') {
                 if (target.className === 'mindmap-pattern-style mindmap-pattern1') {
                     if ((node.data as any).branch === 'Root') {
@@ -356,7 +363,7 @@ export class UtilityMethods {
                     }
                 }
             }
-           // diagram.dataBind();
+            // diagram.dataBind();
         }
         for (let i = 0; i < diagram.connectors.length; i++) {
             let connector = diagram.connectors[i];
@@ -382,7 +389,7 @@ export class UtilityMethods {
                     this.selectedItem.templateType = 'template3';
                     break;
             }
-           // diagram.dataBind();
+            // diagram.dataBind();
         }
         diagram.historyManager.endGroupAction();
         diagram.doLayout();
@@ -756,8 +763,8 @@ export class UtilityMethods {
                 this.selectedItem.printSettings.pageHeight = this.selectedItem.diagram.pageSettings.height;
                 this.selectedItem.printSettings.pageWidth = this.selectedItem.diagram.pageSettings.width;
                 this.selectedItem.printSettings.paperSize = "A4";
-                this.selectedItem.printSettings.isPortrait = this.selectedItem.diagram.pageSettings.orientation === 'Portrait'? true:false
-                this.selectedItem.printSettings.isLandscape = this.selectedItem.diagram.pageSettings.orientation === 'Landscape'? true:false
+                this.selectedItem.printSettings.isPortrait = this.selectedItem.diagram.pageSettings.orientation === 'Portrait' ? true : false
+                this.selectedItem.printSettings.isLandscape = this.selectedItem.diagram.pageSettings.orientation === 'Landscape' ? true : false
                 this.selectedItem.printSettings.multiplePage = this.selectedItem.diagram.pageSettings.multiplePage;
                 this.selectedItem.printDialog.show();
                 break;
@@ -773,11 +780,11 @@ export class UtilityMethods {
                 break;
             case 'zoomin':
                 diagram.zoomTo({ type: 'ZoomIn', zoomFactor: 0.2 });
-                zoomCurrentValue.content  = (diagram.scrollSettings.currentZoom * 100).toFixed() + '%';
+                zoomCurrentValue.content = (diagram.scrollSettings.currentZoom * 100).toFixed() + '%';
                 break;
             case 'zoomout':
                 diagram.zoomTo({ type: 'ZoomOut', zoomFactor: 0.2 });
-                zoomCurrentValue.content  = (diagram.scrollSettings.currentZoom * 100).toFixed() + '%';
+                zoomCurrentValue.content = (diagram.scrollSettings.currentZoom * 100).toFixed() + '%';
                 break;
             case 'showtoolbar':
                 this.hideElements('hide-toolbar', diagram);
@@ -808,7 +815,7 @@ export class UtilityMethods {
                 this.executeEditMenu(diagram, commandType);
                 break;
         }
-      //  diagram.dataBind();
+        //  diagram.dataBind();
     };
 
     public executeEditMenu(diagram: Diagram, commandType: string) {
@@ -850,9 +857,12 @@ export class UtilityMethods {
         if (diagram) {
             diagram.updateViewPort();
         }
+        if (elementType == 'hide-properties') {
+            this.selectedItem.btnHideToolbar.isPrimary = this.selectedItem.btnHideToolbar.isPrimary ? false : true;
+        }
     }
 
-    public getPaperSize(paperName:string){
+    public getPaperSize(paperName: string) {
         let paperSize: PaperSize = new PaperSize();
         switch (paperName) {
             case 'Letter':
@@ -887,7 +897,7 @@ export class UtilityMethods {
         return paperSize;
     };
 
-    public fileName(){
+    public fileName() {
         return document.getElementById('diagramName').innerHTML;
     }
 

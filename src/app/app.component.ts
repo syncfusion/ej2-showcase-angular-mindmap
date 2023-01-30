@@ -6,7 +6,7 @@ import { DataManager } from '@syncfusion/ej2-data';
 import { SelectorViewModel } from './scripts/selector';
 import { DiagramClientSideEvents } from './scripts/events';
 import { PaperSize, UtilityMethods } from './scripts/utilitymethods';
-import { ChangeArgs, RadioButtonComponent } from '@syncfusion/ej2-angular-buttons';
+import { ButtonComponent, ChangeArgs, RadioButtonComponent } from '@syncfusion/ej2-angular-buttons';
 import { ChangeEventArgs as DropDownChangeEventArgs, DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import { PropertyChange } from './scripts/properties';
 import { ChangeEventArgs as NumericChangeEventArgs, ColorPickerEventArgs, SliderChangeEventArgs, TextBoxComponent } from '@syncfusion/ej2-angular-inputs';
@@ -71,6 +71,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('mindmapTextStyleToolbar')
   public mindmapTextStyleToolbar: ToolbarComponent;
 
+  @ViewChild('btnHideToolbar')
+  public btnHideToolbar: ButtonComponent;
+
   public diagramradioChecked: boolean = true;
 
   public textradioChecked: boolean = false;
@@ -97,6 +100,7 @@ export class AppComponent implements AfterViewInit {
     this.selectedItem.treeObj = this.treeObj;
     this.selectedItem.exportDialog = this.exportDialog;
     this.selectedItem.printDialog = this.printDialog;
+    this.selectedItem.btnHideToolbar = this.btnHideToolbar;
     //this.diagramRadioButton.checked = true;
     document.getElementById('closeIconDiv').onclick = this.onHideNodeClick.bind(this);
     document.onmouseover = this.menumouseover.bind(this);
@@ -315,8 +319,10 @@ export class AppComponent implements AfterViewInit {
     this.diagram.dataBind();
     document.getElementById('overlay').style.display = 'block';
     document.getElementById('treeview').style.display = 'none';
+    if(this.btnWindowMenu.items[2].iconCss === 'sf-icon-check-tick'){
     document.getElementById('shortcutDiv').style.visibility = 'visible';
-    this.btnWindowMenu.items[2].iconCss = document.getElementById('shortcutDiv').style.visibility === "hidden" ? '' : 'sf-icon-check-tick';
+    }
+   // this.btnWindowMenu.items[2].iconCss = document.getElementById('shortcutDiv').style.visibility === "hidden" ? '' : 'sf-icon-check-tick';
     // this.diagram.fitToPage();
     this.diagram.updateViewPort();
   }
@@ -471,7 +477,7 @@ export class AppComponent implements AfterViewInit {
     }
     setTimeout(() => {
       if (this.selectedItem.mindMapPatternTarget) {
-        this.utilityMethods.mindmapPatternChange(this.selectedItem.mindMapPatternTarget);
+        this.utilityMethods.mindmapPatternChange(this.selectedItem.mindMapPatternTarget, true);
       }
     }, 0);
   }
