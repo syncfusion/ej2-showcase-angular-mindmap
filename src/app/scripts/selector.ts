@@ -12,6 +12,7 @@ import { Toolbar, TreeView } from '@syncfusion/ej2-angular-navigations';
 import { TextBoxComponent } from '@syncfusion/ej2-angular-inputs';
 import { DropDownButtonComponent } from '@syncfusion/ej2-angular-splitbuttons';
 import { DialogComponent } from '@syncfusion/ej2-angular-popups';
+import { ButtonComponent } from '@syncfusion/ej2-angular-buttons';
 
 
 @Injectable()
@@ -25,6 +26,7 @@ export class SelectorViewModel {
     public btnZoomIncrement: DropDownButtonComponent;
     public exportDialog: DialogComponent;
     public printDialog: DialogComponent;
+    public btnHideToolbar: ButtonComponent;
     public isCopyLayoutElement: boolean = false;
     public index: number = 1;
     public mindMapPatternTarget: any;

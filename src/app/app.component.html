@@ -488,34 +488,17 @@
                         </ejs-dropdownlist>
                     </div>
                 </div>
-                <div class="col-xs-6 db-col-right">
-                    <div class="row">
-                        Region
-                    </div>
-                    <div class="row db-dialog-child-prop-row">
-                        <ejs-dropdownlist id="exportRegion" [(value)]="this.selectedItem.exportSettings.region" [dataSource]='dropDownDataSources.diagramRegions'
-                            [fields]='fields'>
-                        </ejs-dropdownlist>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </ng-template>
 </ejs-dialog>
 
-<ejs-dialog id="printDialog" #printDialog width='335px' height="360px" header='Print Diagram' [target]='dlgTarget' isModal='true' [animationSettings]='dialogAnimationSettings'
+<ejs-dialog id="printDialog" #printDialog width='335px' height="300px" header='Print Diagram' [target]='dlgTarget' isModal='true' [animationSettings]='dialogAnimationSettings'
     [buttons]='printingButtons' [visible]='dialogVisibility' showCloseIcon='true'>
     <ng-template #content>
         <div id="printDialogContent">
-            <div class="row">
-                <div class="row">
-                    Region
-                </div>
-                <div class="row db-dialog-child-prop-row">
-                    <ejs-dropdownlist [(value)]="this.selectedItem.printSettings.region" [dataSource]='dropDownDataSources.diagramRegions' [fields]='fields'>
-                    </ejs-dropdownlist>
-                </div>
-            </div>
+           
             <div class="row db-dialog-prop-row">
                 <div class="row">
                     Print Settings
