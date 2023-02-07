@@ -181,7 +181,7 @@ export class DiagramClientSideEvents {
                         return true;
                     },
                     execute: () => {
-                        if (diagram.selectedItems.nodes.length > 0) {
+                        if (diagram.selectedItems.nodes.length > 0 && this.selectedItem.isExpanded) {
                             var node = diagram.selectedItems.nodes[0];
                             node.isExpanded = !node.isExpanded;
                             diagram.dataBind();
@@ -198,7 +198,9 @@ export class DiagramClientSideEvents {
                     },
                     execute: () => {
                         var node = diagram.nodes[0];
-                        node.isExpanded = !node.isExpanded;
+                        if (this.selectedItem.isExpanded) {
+                            node.isExpanded = !node.isExpanded;
+                        }
                         diagram.dataBind();
                     },
                     gesture: {
@@ -345,6 +347,7 @@ export class DiagramClientSideEvents {
                 document.getElementById('propertyHeader').innerText = "Properties";
                 this.selectedItem.textAreaObj.value = "";
                 this.selectedItem.utilityMethods.onClickDisable(true);
+                // this.selectedItem.mindmapShape.
             }
         }
     }
@@ -355,7 +358,7 @@ export class DiagramClientSideEvents {
         diagram.historyManager.redoStack.length > 0 ? this.selectedItem.toolbarObj.items[1].disabled = false : this.selectedItem.toolbarObj.items[1].disabled = true
     };
 
-    
+
 
     public keyDown(args: IKeyEventArgs) {
         let diagram: Diagram = this.selectedItem.diagram;
@@ -375,7 +378,7 @@ export class DiagramClientSideEvents {
     public scrollChange(args: IScrollChangeEventArgs) {
         var zoomCurrentValue: any = document.getElementById("btnZoomIncrement");
         if (zoomCurrentValue && (zoomCurrentValue as any).ej2_instances) {
-      
+
             zoomCurrentValue = (document.getElementById("btnZoomIncrement") as any).ej2_instances[0];
             zoomCurrentValue.content = Math.round(this.selectedItem.diagram.scrollSettings.currentZoom * 100) + ' %';
         }

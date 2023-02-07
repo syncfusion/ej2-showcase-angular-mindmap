@@ -53,7 +53,7 @@ export class DropDownDataSources {
 
     public fileFormats: { [key: string]: Object }[] = [
         { text: 'JPG', value: 'JPG' }, { text: 'PNG', value: 'PNG' },
-        { text: 'BMP', value: 'BMP' }, { text: 'SVG', value: 'SVG' }
+        { text: 'SVG', value: 'SVG' }
     ];
 
     public diagramRegions: { [key: string]: Object }[] = [

@@ -13,6 +13,7 @@ import { TextBoxComponent } from '@syncfusion/ej2-angular-inputs';
 import { DropDownButtonComponent } from '@syncfusion/ej2-angular-splitbuttons';
 import { DialogComponent } from '@syncfusion/ej2-angular-popups';
 import { ButtonComponent } from '@syncfusion/ej2-angular-buttons';
+import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 
 
 @Injectable()
@@ -27,6 +28,7 @@ export class SelectorViewModel {
     public exportDialog: DialogComponent;
     public printDialog: DialogComponent;
     public btnHideToolbar: ButtonComponent;
+    public mindmapShape: DropDownListComponent;
     public isCopyLayoutElement: boolean = false;
     public index: number = 1;
     public mindMapPatternTarget: any;
