@@ -74,6 +74,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('btnHideToolbar')
   public btnHideToolbar: ButtonComponent;
 
+  @ViewChild('mindmapShape')
+  public mindmapShape: DropDownListComponent;
+
   public diagramradioChecked: boolean = true;
 
   public textradioChecked: boolean = false;
@@ -101,6 +104,7 @@ export class AppComponent implements AfterViewInit {
     this.selectedItem.exportDialog = this.exportDialog;
     this.selectedItem.printDialog = this.printDialog;
     this.selectedItem.btnHideToolbar = this.btnHideToolbar;
+    this.selectedItem.mindmapShape = this.mindmapShape;
     //this.diagramRadioButton.checked = true;
     document.getElementById('closeIconDiv').onclick = this.onHideNodeClick.bind(this);
     document.onmouseover = this.menumouseover.bind(this);
@@ -689,6 +693,11 @@ export class AppComponent implements AfterViewInit {
   public menuClick(args: MenuEventArgs): void {
     this.utilityMethods.menuClick(args);
   }
+
+  public levelBeforeOpen(args: any): void {
+      console.log(args);
+  }
+
 
   public beforeItemRender(args: MenuEventArgs): void {
     let shortCutText = this.utilityMethods.getShortCutKey(args.item.text);

@@ -281,7 +281,7 @@
             <div class="col-xs-12 db-col-left">
               <ejs-dropdownlist #mindMapLevels id='mindMapLevels' [fields]='fields' [(value)]='value'
                 [dataSource]='dropDownDataSources.mindmapLevelDatasource'
-                (change)="mindmapLevelChange($event)"></ejs-dropdownlist>
+                (change)="mindmapLevelChange($event)" (open)="levelBeforeOpen($event)"></ejs-dropdownlist>
             </div>
           </div>
           <div class="row db-prop-row">
@@ -290,7 +290,7 @@
               <div class="e-text-spacing">
                 <ejs-dropdownlist #mindmapShape id='mindmapShape' [fields]='fields' [(value)]='shapeValue'
                   [dataSource]='dropDownDataSources.mindmapShapeDatasource'
-                  (change)="mindmapShapeChange($event)"></ejs-dropdownlist>
+                  (change)="mindmapShapeChange($event)" ></ejs-dropdownlist>
               </div>
             </div>
             <div class="col-xs-3 db-col-left db-prop-text-style" style="padding-top: 5px;margin-left: 10px;">
