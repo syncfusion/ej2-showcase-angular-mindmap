@@ -104,7 +104,7 @@
         <div id="diagramContainerDiv" class='db-current-diagram-container'>
           <ejs-diagram #diagram id="diagram" width="100%" height="100%" [snapSettings]='snapSettings'
             [rulerSettings]="rulerSettings" [layout]="layout" [selectedItems]="selectedItems" [tool]="tool"
-            [dataSourceSettings]='dataSourceSettings' [getNodeDefaults]="getNodeDefaults.bind(this)"
+            [dataSourceSettings]='dataSourceSettings' [getNodeDefaults]="getNodeDefaults.bind(this)" [scrollSettings]="scrollSettings"
             [getConnectorDefaults]="getConnectorDefaults.bind(this)" [getCustomTool]='getCustomTool'
             (selectionChange)='diagramEvents.selectionChange($event)' (created)="diagramEvents.created()"
             (scrollChange)="diagramEvents.scrollChange($event)" (historyChange)="diagramEvents.historyChange($event)"
