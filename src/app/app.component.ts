@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core';
 import { DiagramComponent, MindMapService } from '@syncfusion/ej2-angular-diagrams';
-import { BasicShapeModel, ConnectorConstraints, ConnectorModel, DataBinding, Diagram, DiagramRegions, DiagramTools, FileFormats, HierarchicalTree, MindMap, MouseEventArgs, Node, NodeConstraints, NodeModel, PointPort, PointPortModel, PortVisibility, RulerSettingsModel, SelectorConstraints, SelectorModel, SnapConstraints, SnapSettingsModel, ToolBase, UserHandleModel } from '@syncfusion/ej2-diagrams';
+import { BasicShapeModel, ConnectorConstraints, ConnectorModel, DataBinding, Diagram, DiagramRegions, DiagramTools, FileFormats, HierarchicalTree, MindMap, MouseEventArgs, Node, NodeConstraints, NodeModel, PointPort, PointPortModel, PortVisibility, RulerSettingsModel, ScrollSettingsModel, SelectorConstraints, SelectorModel, SnapConstraints, SnapSettingsModel, ToolBase, UndoRedo, UserHandleModel } from '@syncfusion/ej2-diagrams';
 import { DropDownDataSources } from './scripts/dropdowndatasource';
 import { DataManager } from '@syncfusion/ej2-data';
 import { SelectorViewModel } from './scripts/selector';
@@ -16,7 +16,7 @@ import { BeforeOpenCloseMenuEventArgs, ClickEventArgs, ContextMenuComponent, Nod
 import { closest } from '@syncfusion/ej2-base';
 import { AnimationSettingsModel, DialogComponent } from '@syncfusion/ej2-angular-popups';
 
-Diagram.Inject(DataBinding, MindMap, HierarchicalTree);
+Diagram.Inject(DataBinding, MindMap, HierarchicalTree, UndoRedo);
 
 @Component({
   selector: 'app-root',
@@ -111,6 +111,10 @@ export class AppComponent implements AfterViewInit {
     let element: any = document.getElementsByClassName('e-control e-textbox e-lib');
     element[1].style.height = "365px";
   }
+
+  // scrollsettings
+
+  public scrollSettings: ScrollSettingsModel = { canAutoScroll: true, scrollLimit: 'Infinity'};
 
   // Datasource for the diagram and treeview
 
@@ -952,7 +956,7 @@ class DeleteClick extends ToolBase {
       if (selectedObject[0]) {
         if (selectedObject[0] instanceof Node) {
           let node: Node = selectedObject[0] as Node;
-          this.selectedItem.utilityMethods.removeSubChild(node);
+          this.selectedItem.utilityMethods.removeChild();
         }
         this.diagram.doLayout();
       }
