@@ -373,8 +373,8 @@ export class AppComponent implements AfterViewInit {
   public strokeStyleTemplate: string = '<div class="db-ddl-template-style"><span class="${className}"></span></div>';
 
   public asyncSettings: Object = {
-    saveUrl: 'https://aspnetmvc.syncfusion.com/services/api/uploadbox/Save',
-    removeUrl: 'https://aspnetmvc.syncfusion.com/services/api/uploadbox/Remove'
+    saveUrl: 'https://services.syncfusion.com/angular/production/api/FileUploader/Save',
+    removeUrl: 'https://services.syncfusion.com/angular/production/api/FileUploader/Remove'
   };
 
   // Diagram Initialization
