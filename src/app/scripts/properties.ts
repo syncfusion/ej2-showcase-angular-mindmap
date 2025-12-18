@@ -13,6 +13,9 @@ import { SelectorViewModel } from './selector';
 
 @Injectable()
 export class PropertyChange {
+    static getColor(fontColor: string): string {
+        throw new Error('Method not implemented.');
+    }
 
     private selectedItem: SelectorViewModel;
     constructor(selectedItem: SelectorViewModel) {
@@ -23,18 +26,26 @@ export class PropertyChange {
         let diagram: Diagram = this.selectedItem.diagram;
         if (diagram && diagram.nodes.length > 0) {
             var nodes = this.selectedItem.levelType === "Selected Item" ? diagram.selectedItems.nodes : diagram.nodes;
+            let targetData: any;
             for (var i = 0; i < nodes.length; i++) {
                 var node = nodes[i];
+                targetData = this.selectedItem.workingData.find((data: any) => { return data.id === (node.data as any).id; });
                 if (node.addInfo) {
                     var addInfo = (node.addInfo as any);
+                    const targetData = this.selectedItem.workingData.find((data: any) => { return data.id === (node.data as any).id; });
                     if ('Level' + addInfo.level === this.selectedItem.levelType || addInfo.level === this.selectedItem.levelType || this.selectedItem.levelType === "Selected Item") {
                         switch (args.propertyName.toString().toLowerCase()) {
                             case 'fill':
                                 node.style.fill = this.getColor(this.selectedItem.fill);
-                                
+                                (node.data as any).fill = node.style.fill;
+                                targetData.fill = node.style.fill;
                                 break;
                             case 'stroke':
                                 node.style.strokeColor = this.getColor(this.selectedItem.stroke);
+                                (node.data as any).strokeColor = node.style.strokeColor;
+                                (node.data as any).conStrokeColor = node.style.strokeColor;
+                                targetData.conStrokeColor = node.style.strokeColor;
+                                targetData.strokeColor = node.style.strokeColor;
                                 if ((node as Node).inEdges.length > 0) {
                                     var connector = this.selectedItem.utilityMethods.getConnector(diagram.connectors, (node as Node).inEdges[0]);
                                     connector.style.strokeColor = node.style.strokeColor;
@@ -42,6 +53,11 @@ export class PropertyChange {
                                 break;
                             case 'strokewidth':
                                 node.style.strokeWidth = this.selectedItem.strokeWidth;
+                                node.style.strokeWidth = node.style.strokeWidth;
+                                (node.data as any).strokeWidth = node.style.strokeWidth;
+                                (node.data as any).conStrokeWidth = node.style.strokeWidth;
+                                targetData.conStrokeWidth = node.style.strokeWidth;
+                                targetData.strokeWidth = node.style.strokeWidth;
                                 if ((node as Node).inEdges.length > 0) {
                                     var connector1 = this.selectedItem.utilityMethods.getConnector(diagram.connectors, (node as Node).inEdges[0]);
                                     connector1.style.strokeWidth = this.selectedItem.strokeWidth;
@@ -49,6 +65,10 @@ export class PropertyChange {
                                 break;
                             case 'strokestyle':
                                 node.style.strokeDashArray = this.selectedItem.strokeStyle;
+                                (node.data as any).strokeStyle = node.style.strokeDashArray;
+                                targetData.strokeStyle = node.style.strokeDashArray;
+                                targetData.conStrokeStyle = node.style.strokeDashArray;
+                                (node.data as any).conStrokeStyle = node.style.strokeDashArray;
                                 if ((node as Node).inEdges.length > 0) {
                                     var connector2 = this.selectedItem.utilityMethods.getConnector(diagram.connectors, (node as Node).inEdges[0]);
                                     connector2.style.strokeDashArray = this.selectedItem.strokeStyle;
@@ -56,53 +76,84 @@ export class PropertyChange {
                                 break;
                             case 'opacity':
                                 node.style.opacity = this.selectedItem.shapeOpacity / 100;
+                                (node.data as any).shapeOpacity = node.style.opacity;
+                                targetData.shapeOpacity = node.style.opacity;
                                 (document.getElementById("mindmapOpacityText") as any).value = this.selectedItem.shapeOpacity + '%';
                                 break;
                             case 'shape':
-                                this.drawShapeChange(node);
+                                this.drawShapeChange(node, args, targetData);
                                 break;
                             default:
-                                this.updateMindMapTextStyle(node, args.propertyName.toString().toLowerCase());
+                                this.updateMindMapTextStyle(node, args.propertyName.toString().toLowerCase(), targetData);
                                 break;
                         }
                     }
                 }
+                if (targetData) {
+                    targetData.nodeShapeType = node.shape.type;
+                    if (targetData.nodeShapeType === 'Basic') {
+                        targetData.nodeShape = (node.shape as any).shape;
+                        targetData.nodeShapeData = '';
+                        targetData.nodeHeight = node.height
+                    }
+                    else {
+                        targetData.nodeShapeData = (node.shape as any).data;
+                        targetData.nodeShape = '';
+                        targetData.nodeHeight = node.height
+                    }
+                }
+
                 diagram.dataBind();
             }
         }
     };
-    public updateMindMapTextStyle(node: NodeModel, propertyName: string) {
+    public updateMindMapTextStyle(node: NodeModel, propertyName: string, targetData: any) {
         let diagram: Diagram = this.selectedItem.diagram;
         if (node.addInfo && node.annotations.length > 0) {
             var annotation = node.annotations[0].style;
             switch (propertyName) {
                 case 'fontfamily':
                     annotation.fontFamily = this.selectedItem.fontFamily;
+                    (node.data as any).fontFamily = annotation.fontFamily;
                     break;
                 case 'fontsize':
                     annotation.fontSize = this.selectedItem.fontSize;
+                    (node.data as any).fontSize = annotation.fontSize;
                     break;
                 case 'fontcolor':
                     annotation.color = this.getColor(this.selectedItem.fontColor);
+                    (node.data as any).color = annotation.color;
                     break;
                 case 'textopacity':
                     annotation.opacity = this.selectedItem.textOpacity / 100;
+                    (node.data as any).opacity = annotation.opacity;
                     (document.getElementById("textOpacityText") as any).value = this.selectedItem.textOpacity + '%';
                     break;
                 case 'bold':
                     annotation.bold = !annotation.bold;
+                    (node.data as any).bold = annotation.bold;
                     break;
                 case 'italic':
                     annotation.italic = !annotation.italic;
+                    (node.data as any).italic = annotation.italic;
                     break;
                 case 'underline':
                     annotation.textDecoration = annotation.textDecoration === 'None' || !annotation.textDecoration ? 'Underline' : 'None';
+                    (node.data as any).textDecoration = annotation.textDecoration;
                     break;
             }
         }
+        targetData.fontFamily = annotation.fontFamily;
+        targetData.fontSize = annotation.fontSize;
+        targetData.fontColor = annotation.color;
+        targetData.textOpacity = annotation.opacity;
+        targetData.bold = annotation.bold;
+        targetData.italic = annotation.italic;
+        targetData.textDecoration = annotation.textDecoration;
+        targetData.nodeHeight = node.height;
         diagram.dataBind();
     }
-    public drawShapeChange(node: NodeModel) {
+    public drawShapeChange(node: NodeModel, args: any, targetData: any) {
         let diagram: Diagram = this.selectedItem.diagram;
         if (this.selectedItem.nodeShape === 'Rectangle') {
             node.shape = { type: 'Basic', shape: 'Rectangle' };
@@ -123,6 +174,25 @@ export class PropertyChange {
             node.shape = { type: 'Basic', shape: 'Rectangle' };
             node.height = 4;
         }
+        if (targetData) {
+            targetData.nodeShapeType = node.shape.type;
+            (node.data as any).nodeShapeType = node.shape.type;
+            if (targetData.nodeShapeType === 'Basic') {
+                targetData.nodeShape = (node.shape as any).shape;
+                targetData.nodeShapeData = '';
+                targetData.nodeHeight = node.height;
+                (node.data as any).nodeHeight = node.height;
+            }
+            else {
+                targetData.nodeShapeData = (node.shape as any).data;
+                targetData.nodeShape = '';
+                (node.data as any).nodeShapeData = (node.shape as any).data;
+                targetData.nodeHeight = node.height;
+                (node.data as any).nodeHeight = node.height;
+
+            }
+        }
+
         diagram.dataBind();
     }
 
@@ -152,6 +222,5 @@ export class PropertyChange {
         document.getElementById('propertyHeader').innerText = "Properties";
         this.selectedItem.textAreaObj.value = "";
     }
-
 
 }

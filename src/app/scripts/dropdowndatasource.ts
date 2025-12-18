@@ -2,7 +2,6 @@ import { ItemModel } from '@syncfusion/ej2-splitbuttons';
 import { MenuItemModel } from '@syncfusion/ej2-navigations';
 
 export class DropDownDataSources {
-
     public fileMenuItems: ItemModel[] = this.getFileMenuItems();
     public editMenuItems: ItemModel[] = this.getEditMenuItems();
     public viewMenuItems: ItemModel[] = this.getViewMenuItems();
@@ -14,7 +13,6 @@ export class DropDownDataSources {
         let menuItems: ItemModel[] = [
             { text: 'New' , iconCss: 'sf-icon-new'}, { text: 'Open', iconCss: 'sf-icon-open' }, { separator: true },
             { text: 'Save', iconCss: 'sf-icon-save' },
-            // { text: 'Rename' }, { separator: true },
             { text: 'Export', iconCss: 'sf-icon-export' }, { separator: true },
             { text: 'Print', iconCss: 'sf-icon-print' }
         ];
@@ -23,9 +21,7 @@ export class DropDownDataSources {
 
     public getEditMenuItems(): ItemModel[] {
         let menuItems: ItemModel[] = [
-            { text: 'Undo', iconCss: 'sf-icon-undo' }, { text: 'Redo', iconCss: 'sf-icon-redo' }, { separator: true },
-            { text: 'Cut', iconCss: 'sf-icon-cut' }, { text: 'Copy', iconCss: 'sf-icon-copy' },
-            { text: 'Paste', iconCss: 'sf-icon-paste' }, { text: 'Delete', iconCss: 'sf-icon-delete' }, { separator: true },
+            { text: 'Delete', iconCss: 'sf-icon-delete' }, { separator: true },
             { text: 'Select All' },
         ];
         return menuItems;

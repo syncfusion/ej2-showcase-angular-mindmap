@@ -4,7 +4,8 @@
 
 import {
     NodeModel, NodeConstraints, PointModel, ConnectorModel, LinearGradient,
-    Diagram, ConnectorConstraints, Node, TextStyle, TextStyleModel, SelectorConstraints, TextAlign, HorizontalAlignment, VerticalAlignment, Connector, ShapeAnnotationModel, randomId, UserHandleModel, Side, MarginModel, SnapConstraints
+    Diagram, ConnectorConstraints, Node, TextStyle, TextStyleModel, SelectorConstraints, TextAlign, HorizontalAlignment, VerticalAlignment, Connector, ShapeAnnotationModel, randomId, UserHandleModel, Side, MarginModel, SnapConstraints,
+    DiagramRegions
 } from '@syncfusion/ej2-diagrams';
 import { SelectorViewModel } from './selector';
 import { Dialog } from '@syncfusion/ej2-angular-popups';
@@ -95,10 +96,20 @@ export class UtilityMethods {
         if (!canSelect) {
             diagram.select([node1]);
         }
+        let mindMapPatternTarget : any = this.selectedItem.mindMapPatternTarget;
+        if (mindMapPatternTarget) {
+          this.mindmapPatternChange(mindMapPatternTarget);
+        }
+        var diagramOrientation : any = diagram.layout.orientation;
+        if(diagramOrientation === 'Vertical') {
+            this.updateOrientation(diagram);
+        }
 
-        // diagram.dataBind();
+        diagram.dataBind();
+        diagram.doLayout();
+        diagram.fitToPage();
+
     }
-
     public getMindMapShape(parentNode: NodeModel) {
         let sss: { [key: string]: Object } = {};
         let node: NodeModel = {};
@@ -106,7 +117,6 @@ export class UtilityMethods {
         let addInfo: any = parentNode.addInfo;
         if (this.templateType === 'template1') {
             let annotations = {
-                //verticalAlignment: 'Bottom', offset: { x: 0.5, y: 0 },
                 content: ''
             };
             node = {
@@ -152,9 +162,12 @@ export class UtilityMethods {
         connector.type = 'Orthogonal';
         connector.style.strokeColor = node.style.fill;
         connector.targetDecorator = { shape: 'None' };
-        //connector.constraints = ej.diagrams.ConnectorConstraints.PointerEvents | ej.diagrams.ConnectorConstraints.Select | ej.diagrams.ConnectorConstraints.Delete;
         node.constraints = NodeConstraints.Default & ~NodeConstraints.Drag;
-        node.ports = [{ id: 'leftPort', offset: { x: 0, y: 0.5 } }, { id: 'rightPort', offset: { x: 1, y: 0.5 } }];
+        node.ports = [
+            { id: 'leftPort', offset: { x: 0, y: 0.5 } },
+            { id: 'rightPort', offset: { x: 1, y: 0.5 } },
+            { id: 'topPort', offset: { x: 0.5, y: 0 } },
+            { id: 'bottomPort', offset: { x: 0.5, y: 1 } }];
         sss.node = node;
         sss.connector = connector;
         return sss;
@@ -194,7 +207,33 @@ export class UtilityMethods {
         connector.style.strokeWidth = 3;
         return connector;
     };
-
+    public bindMindMapProperties(node: NodeModel, selectedItem: SelectorViewModel): void {
+        selectedItem.preventPropertyChange = true;
+        selectedItem.mindmapSettings.stroke = node.style.strokeColor;
+        selectedItem.mindmapSettings.strokeStyle = node.style.strokeDashArray ? node.style.strokeDashArray : 'None';
+        selectedItem.mindmapSettings.strokeWidth = node.style.strokeWidth;
+        selectedItem.mindmapSettings.fill = node.style.fill;
+        selectedItem.mindmapSettings.opacity = (node.style.opacity || 1) * 100;
+        selectedItem.mindmapSettings.opacityText = (selectedItem.mindmapSettings.opacity || '100') + '%';
+        if (node.annotations.length > 0) {
+            let annotation: TextStyle = node.annotations[0].style as TextStyle;
+            selectedItem.mindmapSettings.fontFamily = annotation.fontFamily;
+            selectedItem.mindmapSettings.fontColor = annotation.color;
+            selectedItem.mindmapSettings.fontSize = annotation.fontSize;
+            selectedItem.mindmapSettings.textOpacity = (annotation.opacity || 1) * 100;
+            selectedItem.mindmapSettings.textOpacityText = (selectedItem.mindmapSettings.textOpacity || '100') + '%';
+            let toolbarTextStyle: any = document.getElementById('mindmapTextStyleToolbar');
+            if (toolbarTextStyle) {
+                toolbarTextStyle = toolbarTextStyle.ej2_instances[0];
+            }
+            if (toolbarTextStyle) {
+                toolbarTextStyle.items[0].cssClass = annotation.bold ? 'tb-item-start tb-item-selected' : 'tb-item-start';
+                toolbarTextStyle.items[1].cssClass = annotation.italic ? 'tb-item-middle tb-item-selected' : 'tb-item-middle';
+                toolbarTextStyle.items[2].cssClass = annotation.textDecoration === 'Underline' ? 'tb-item-end tb-item-selected' : 'tb-item-end';
+            }
+        }
+        selectedItem.preventPropertyChange = false;
+    }
     public getConnector(connectors: ConnectorModel[], name: string): Connector {
         for (let i: number = 0; i < connectors.length; i++) {
             if (connectors[i].id === name) {
@@ -232,6 +271,11 @@ export class UtilityMethods {
                 this.removeSubChild(childNode);
             }
             else {
+                for (var x = this.selectedItem.workingData.length - 1; x >= 0; x--) {
+                    if (this.selectedItem.workingData[x].id === (childNode.data as any).id) {
+                        this.selectedItem.workingData.splice(x, 1);
+                    }
+                }
                 diagram.remove(childNode);
             }
         }
@@ -252,7 +296,14 @@ export class UtilityMethods {
                 diagram.select([childNode]);
             }
         }
-        diagram.remove(node);
+        for (var x = this.selectedItem.workingData.length - 1; x >= 0; x--) {
+            if (this.selectedItem.workingData[x].id === (node.data as any).id && (node.data as any).branch !='Root') {
+                this.selectedItem.workingData.splice(x, 1);
+            }
+        }
+        if ((node.data as any).branch !=="Root") {
+            diagram.remove(node);
+        }
     }
 
     public hideUserHandle(name: string) {
@@ -292,6 +343,7 @@ export class UtilityMethods {
         this.selectedItem.mindMapPatternTarget = args;
         diagram.historyManager.startGroupAction();
         var nodes = canUpdate ? diagram.selectedItems.nodes : diagram.nodes;
+        let targetData : any;
         if (canUpdate && diagram.selectedItems.nodes.length > 0) {
             nodes = diagram.selectedItems.nodes;
         } else {
@@ -300,6 +352,7 @@ export class UtilityMethods {
 
         for (let i = 0; i < nodes.length; i++) {
             let node = nodes[i];
+            targetData = this.selectedItem.workingData.find((item : any) => item.id === (node.data as any).id);
             if (node.id !== 'textNode') {
                 if (target.className === 'mindmap-pattern-style mindmap-pattern1') {
                     if ((node.data as any).branch === 'Root') {
@@ -363,8 +416,20 @@ export class UtilityMethods {
                     }
                 }
             }
-            // diagram.dataBind();
+            targetData.nodeShapeType = node.shape.type;
+            if (targetData.nodeShapeType === 'Basic') {
+                targetData.nodeShape = (node.shape as any).shape;
+                targetData.nodeShapeData = '';
+                targetData.nodeHeight = node.height
+            }
+            else {
+                targetData.nodeShapeData = (node.shape as any).data;
+                targetData.nodeShape = '';
+                targetData.nodeHeight = node.height
+            }
+            diagram.dataBind();
         }
+
         for (let i = 0; i < diagram.connectors.length; i++) {
             let connector = diagram.connectors[i];
             switch (target.className) {
@@ -389,10 +454,11 @@ export class UtilityMethods {
                     this.selectedItem.templateType = 'template3';
                     break;
             }
-            // diagram.dataBind();
+
         }
         diagram.historyManager.endGroupAction();
         diagram.doLayout();
+        diagram.dataBind();
     }
 
     public navigateChild(direction: string) {
@@ -416,16 +482,18 @@ export class UtilityMethods {
         let sameLevelNodes = [];
         if (diagram.selectedItems.nodes.length > 0) {
             let node = diagram.selectedItems.nodes[0];
-            let orientation_1 = (node.addInfo as any).orientation.toString();
-            let connector = this.getConnector(diagram.connectors, (node as Node).inEdges[0]);
-            let parentNode = this.getNode(diagram.nodes, connector.sourceID);
-            for (let i = 0; i < parentNode.outEdges.length; i++) {
-                connector = this.getConnector(diagram.connectors, parentNode.outEdges[i]);
-                let childNode = this.getNode(diagram.nodes, connector.targetID);
-                if (childNode) {
-                    let childOrientation = (childNode.addInfo as any).orientation.toString();
-                    if (orientation_1 === childOrientation) {
-                        sameLevelNodes.push(childNode);
+            if ((node.data as any).branch !== 'Root') {
+                let orientation_1 = (node.addInfo as any).orientation.toString();
+                let connector = this.getConnector(diagram.connectors, (node as Node).inEdges[0]);
+                let parentNode = this.getNode(diagram.nodes, connector.sourceID);
+                for (let i = 0; i < parentNode.outEdges.length; i++) {
+                    connector = this.getConnector(diagram.connectors, parentNode.outEdges[i]);
+                    let childNode = this.getNode(diagram.nodes, connector.targetID);
+                    if (childNode) {
+                        let childOrientation = (childNode.addInfo as any).orientation.toString();
+                        if (orientation_1 === childOrientation) {
+                            sameLevelNodes.push(childNode);
+                        }
                     }
                 }
             }
@@ -503,7 +571,7 @@ export class UtilityMethods {
     public addSibilingChild() {
         let diagram: Diagram = this.selectedItem.diagram;
         let selectedNode: NodeModel = diagram.selectedItems.nodes[0];
-        if ((selectedNode.data as any).branch !== 'Root') {
+        if (selectedNode && (selectedNode.data as any).branch !== 'Root') {
             let selectedNodeOrientation = (selectedNode.addInfo as any).orientation.toString();
             let orientation_3 = selectedNodeOrientation;
             let connector1 = this.getConnector(diagram.connectors, (selectedNode as Node).inEdges[0]);
@@ -552,19 +620,27 @@ export class UtilityMethods {
             diagram.doLayout();
             diagram.endGroupAction();
             diagram.select([node1]);
+            let mindMapPatternTarget: any = this.selectedItem.mindMapPatternTarget;
+            if (mindMapPatternTarget) {
+                this.mindmapPatternChange(mindMapPatternTarget);
+            }
+            let diagramOrientation : any = diagram.layout.orientation;
+            if (diagramOrientation === 'Vertical') {
+                this.updateOrientation(diagram);
+            }
         }
     }
 
-    public download(data: any) {
+    public download(data: string, filename: string): void {
         if ((window.navigator as any).msSaveBlob) {
             let blob = new Blob([data], { type: 'data:text/json;charset=utf-8,' });
-            (window.navigator as any).msSaveOrOpenBlob(blob, 'Diagram.json');
+            (window.navigator as any).msSaveOrOpenBlob(blob, filename + '.json');
         }
         else {
             let dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(data);
             let a = document.createElement('a');
             a.href = dataStr;
-            a.download = 'Diagram.json';
+            a.download = filename + '.json';
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -583,12 +659,7 @@ export class UtilityMethods {
             case 'Save':
                 shortCutKey = shortCutKey + '+S';
                 break;
-            case 'Undo':
-                shortCutKey = shortCutKey + '+Z';
-                break;
-            case 'Redo':
-                shortCutKey = shortCutKey + '+Y';
-                break;
+
             case 'Cut':
                 shortCutKey = shortCutKey + '+X';
                 break;
@@ -660,17 +731,6 @@ export class UtilityMethods {
                 && diagram.commandHandler.clipboardData.clipObject !== undefined) && itemText === 'Paste') {
                 return true;
             }
-            if (itemText === 'Undo' && diagram.historyManager.undoStack.length === 0) {
-                return true;
-            }
-            if (itemText === 'Redo' && diagram.historyManager.redoStack.length === 0) {
-                return true;
-            }
-            if (itemText === 'Select All') {
-                if ((diagram.nodes.length === 0 && diagram.connectors.length === 0)) {
-                    return true;
-                }
-            }
             if (itemText === 'Themes') {
                 return true;
             }
@@ -693,9 +753,9 @@ export class UtilityMethods {
             }
         }
         else if (args === true) {
-            this.selectedItem.toolbarObj.items[6].disabled = true;
-            this.selectedItem.toolbarObj.items[7].disabled = true;
-            this.selectedItem.toolbarObj.items[8].disabled = true;
+           this.selectedItem.toolbarObj.items[6].disabled = true;
+           this.selectedItem.toolbarObj.items[7].disabled = true;
+           this.selectedItem.toolbarObj.items[8].disabled = true;
         }
         this.removeSelectedToolbarItem();
     };
@@ -708,7 +768,7 @@ export class UtilityMethods {
                 item.cssClass = item.cssClass.replace(' tb-item-selected', '');
             }
         }
-        //toolbarEditor.dataBind();
+        toolbarEditor.dataBind();
     }
 
     public getOrientation() {
@@ -752,21 +812,25 @@ export class UtilityMethods {
         switch (commandType.toLowerCase()) {
             case 'new':
                 diagram.clear();
+                diagram.loadDiagram('{"width":"100%","height":"100%","snapSettings":{"constraints":0,"gridType":"Lines","verticalGridlines":{"lineIntervals":[1.25,18.75,0.25,19.75,0.25,19.75,0.25,19.75,0.25,19.75]},"horizontalGridlines":{"lineIntervals":[1.25,18.75,0.25,19.75,0.25,19.75,0.25,19.75,0.25,19.75]}},"tool":1,"layout":{"type":"MindMap","horizontalSpacing":50,"verticalSpacing":50,"getBranch":{},"enableAnimation":true,"connectionPointOrigin":"SamePoint","arrangement":"Nonlinear","enableRouting":false,"fixedNode":"sZIN0"},"selectedItems":{"constraints":4096,"userHandles":[{"name":"leftHandle","pathData":"M11.924,6.202 L4.633,6.202 L4.633,9.266 L0,4.633 L4.632,0 L4.632,3.551 L11.923,3.551 L11.923,6.202Z","backgroundColor":"black","pathColor":"white","side":"Left","offset":0.5,"margin":{"top":10,"bottom":0,"left":0,"right":10},"horizontalAlignment":"Left","verticalAlignment":"Top"},{"name":"rightHandle","pathData":"M0,3.063 L7.292,3.063 L7.292,0 L11.924,4.633 L7.292,9.266 L7.292,5.714 L0.001,5.714 L0.001,3.063Z","backgroundColor":"black","pathColor":"white","side":"Right","offset":0.5,"margin":{"top":10,"bottom":0,"left":10,"right":0},"horizontalAlignment":"Right","verticalAlignment":"Top"},{"name":"devare","pathData":"M 7.04 22.13 L 92.95 22.13 L 92.95 88.8 C 92.95 91.92 91.55 94.58 88.7696.74 C 85.97 98.91 82.55 100 78.52 100 L 21.48 100 C 17.45 100 14.03 98.91 11.24 96.74 C 8.45 94.58 7.0491.92 7.04 88.8 z M 32.22 0 L 67.78 0 L 75.17 5.47 L 100 5.47 L 100 16.67 L 0 16.67 L 0 5.47 L 24.83 5.47 z","backgroundColor":"black","pathColor":"white","side":"Top","offset":0.5,"margin":{"top":0,"bottom":0,"left":0,"right":0},"horizontalAlignment":"Center","verticalAlignment":"Center"}],"nodes":[],"connectors":[],"wrapper":null,"selectedObjects":[]},"dataSourceSettings":{"id":"id","parentId":"parentId","dataSource":{"dateParse":true,"timeZoneHandling":true,"requests":[],"dataSource":{"json":[{"id":"1","Label":"Root","fill":"#D0ECFF","branch":"Root","hasChild":true,"level":0,"strokeColor":"#80BFEA","orientation":"Root"}],"offline":true,"dataType":"json"},"defaultQuery":{"subQuery":null,"isChild":false,"distincts":[],"queries":[{"fn":"onTake","e":{"nos":7}}],"key":"","fKey":"","expands":[],"sortedColumns":[],"groupedColumns":[],"params":[],"lazyLoad":[]},"adaptor":{"options":{"from":"table","requestType":"json","sortBy":"sorted","select":"select","skip":"skip","group":"group","take":"take","search":"search","count":"requiresCounts","where":"where","aggregates":"aggregates","expand":"expand"},"type":{},"pvt":{}}},"root":"1","dataManager":null,"crudAction":{"read":""},"connectionDataSource":{"dataManager":null},"dataMapSettings":[]},"getNodeDefaults":{},"getConnectorDefaults":{},"getCustomTool":{},"selectionChange":{},"rulerSettings":{"showRulers":true,"dynamicGrid":true,"horizontalRuler":{"orientation":"Horizontal","interval":10,"segmentWidth":100,"thickness":25,"tickAlignment":"RightOrBottom","arrangeTick":null},"verticalRuler":{"orientation":"Vertical","interval":10,"segmentWidth":100,"thickness":25,"tickAlignment":"RightOrBottom","arrangeTick":null}},"created":{},"keyDown":{},"textEdit":{},"drop":{},"scrollChange":{},"enableRtl":false,"locale":"en-US","scrollSettings":{"currentZoom":1,"viewPortWidth":1330,"viewPortHeight":629.6614379882812,"horizontalOffset":0,"verticalOffset":-0.33,"padding":{"left":0,"right":0,"top":0,"bottom":0},"scrollLimit":"Diagram","minZoom":0.2,"maxZoom":30},"enablePersistence":false,"backgroundColor":"transparent","constraints":500,"contextMenuSettings":{},"mode":"SVG","layers":[{"id":"default_layer","visible":true,"lock":false,"objects":["sZIN0"],"zIndex":0,"objectZIndex":0}],"nodes":[{"id":"sZIN0","data":{"id":"1","Label":"Root","fill":"#D0ECFF","branch":"Root","hasChild":true,"level":0,"strokeColor":"#80BFEA","orientation":"Root"},"shape":{"type":"Basic","cornerRadius":5,"shape":"Ellipse"},"ports":[{"id":"leftPort","offset":{"x":0,"y":0.5},"visibility":2,"style":{"fill":"black","strokeColor":"black","opacity":1,"strokeDashArray":"","strokeWidth":1},"inEdges":[],"outEdges":[],"height":12,"width":12,"shape":"Square","margin":{"right":0,"bottom":0,"left":0,"top":0},"horizontalAlignment":"Center","verticalAlignment":"Center"},{"id":"rightPort","offset":{"x":1,"y":0.5},"visibility":2,"style":{"fill":"black","strokeColor":"black","opacity":1,"strokeDashArray":"","strokeWidth":1},"inEdges":[],"outEdges":[],"height":12,"width":12,"shape":"Square","margin":{"right":0,"bottom":0,"left":0,"top":0},"horizontalAlignment":"Center","verticalAlignment":"Center"}],"zIndex":0,"constraints":5240810,"style":{"fill":"#D0ECFF","strokeColor":"#80BFEA","strokeWidth":1,"gradient":{"type":"None"},"strokeDashArray":"","opacity":1},"addInfo":{"level":0,"orientation":"Root"},"expandIcon":{"shape":"None","height":10,"width":10,"fill":"white","borderColor":"black","offset":{"x":0.5,"y":1}},"collapseIcon":{"shape":"None","height":10,"width":10,"fill":"white","borderColor":"black","offset":{"x":0.5,"y":1}},"width":150,"height":75,"annotations":[{"id":"VgDkd","content":"Root","annotationType":"String","style":{"strokeWidth":0,"strokeColor":"transparent","fill":"transparent","bold":false,"textWrapping":"WrapWithOverflow","color":"black","whiteSpace":"CollapseSpace","fontFamily":"Arial","fontSize":12,"italic":false,"opacity":1,"strokeDashArray":"","textAlign":"Center","textOverflow":"Wrap","textDecoration":"None"},"hyperlink":{"link":"","hyperlinkOpenState":"NewTab","content":"","textDecoration":"None"},"constraints":4,"visibility":true,"rotateAngle":0,"margin":{"right":0,"bottom":0,"left":0,"top":0},"horizontalAlignment":"Center","verticalAlignment":"Center","offset":{"x":0.5,"y":0.5}}],"container":null,"offsetX":665,"offsetY":314.8307189941406,"visible":true,"horizontalAlignment":"Left","verticalAlignment":"Top","backgroundColor":"transparent","borderColor":"none","borderWidth":0,"rotateAngle":0,"pivot":{"x":0.5,"y":0.5},"margin":{},"flip":"None","wrapper":{"actualSize":{"width":150,"height":75},"offsetX":665,"offsetY":314.8307189941406},"flipMode":"All","isExpanded":true,"fixedUserHandles":[],"excludeFromLayout":false,"inEdges":[],"outEdges":[],"parentId":"","processId":"","umlIndex":-1,"isPhase":false,"isLane":false}],"connectors":[],"diagramSettings":{"inversedAlignment":true},"pageSettings":{"boundaryConstraints":"Infinity","width":null,"orientation":"Landscape","height":null,"background":{"source":"","color":"transparent"},"showPageBreaks":false,"fitOptions":{"canFit":false}},"basicElements":[],"tooltip":{"content":""},"commandManager":{"commands":[{"name":"leftChild","canExecute":{},"execute":{},"gesture":{"key":9},"parameter":""},{"name":"rightChild","canExecute":{},"execute":{},"gesture":{"key":9,"keyModifiers":4},"parameter":""},{"name":"showShortCut","canExecute":{},"execute":{},"gesture":{"key":112},"parameter":""},{"name":"FitToPage","canExecute":{},"execute":{},"gesture":{"key":119},"parameter":""},{"name":"boldLabel","canExecute":{},"execute":{},"gesture":{"key":66,"keyModifiers":1},"parameter":""},{"name":"italicLabel","canExecute":{},"execute":{},"gesture":{"key":73,"keyModifiers":1},"parameter":""},{"name":"underlineLabel","canExecute":{},"execute":{},"gesture":{"key":85,"keyModifiers":1},"parameter":""},{"name":"deleteNode","canExecute":{},"execute":{},"gesture":{"key":8},"parameter":""},{"name":"removeNode","canExecute":{},"execute":{},"gesture":{"key":46},"parameter":""},{"name":"expandCollapse","canExecute":{},"execute":{},"gesture":{"key":32},"parameter":""},{"name":"expandCollapseParent","canExecute":{},"execute":{},"gesture":{"key":69,"keyModifiers":1},"parameter":""},{"gesture":{"key":13},"canExecute":{},"execute":{},"name":"sibilingChildTop","parameter":""},{"name":"newDiagram","canExecute":{},"execute":{},"gesture":{"key":78,"keyModifiers":1},"parameter":""},{"name":"saveDiagram","canExecute":{},"execute":{},"gesture":{"key":83,"keyModifiers":1},"parameter":""},{"name":"openDiagram","canExecute":{},"execute":{},"gesture":{"key":79,"keyModifiers":1},"parameter":""},{"name":"navigationDown","canExecute":{},"execute":{},"gesture":{"key":40},"parameter":""},{"name":"navigationUp","canExecute":{},"execute":{},"gesture":{"key":38},"parameter":""},{"name":"navigationLeft","canExecute":{},"execute":{},"gesture":{"key":37},"parameter":""},{"name":"navigationRight","canExecute":{},"execute":{},"gesture":{"key":39},"parameter":""}]},"version":17.1}');
+                this.selectedItem.workingData = [{ id: '1', Label: 'Root', branch: 'Root', hasChild: true, level: 0, fill: "#D0ECFF", strokeColor: "#80BFEA", orientation: 'Root',nodeShapeType: 'Basic', nodeShape: 'Ellipse', nodeShapeData:'', },];
+                diagram.fitToPage();
                 break;
             case 'open':
                 document.getElementsByClassName('e-file-select-wrap')[0].querySelector('button').click();
                 break;
             case 'save':
-                this.download(diagram.saveDiagram());
+                this.download(diagram.saveDiagram(),(document.getElementById('diagramName') as HTMLInputElement).innerHTML);
                 break;
             case 'print':
-                this.selectedItem.printSettings.pageHeight = this.selectedItem.diagram.pageSettings.height;
-                this.selectedItem.printSettings.pageWidth = this.selectedItem.diagram.pageSettings.width;
+                this.selectedItem.printSettings.pageHeight = 1000;
+                this.selectedItem.printSettings.pageWidth = 900;
                 this.selectedItem.printSettings.paperSize = "A4";
                 this.selectedItem.printSettings.isPortrait = this.selectedItem.diagram.pageSettings.orientation === 'Portrait' ? true : false
                 this.selectedItem.printSettings.isLandscape = this.selectedItem.diagram.pageSettings.orientation === 'Landscape' ? true : false
                 this.selectedItem.printSettings.multiplePage = this.selectedItem.diagram.pageSettings.multiplePage;
-                this.selectedItem.printDialog.show();
+                this.selectedItem.printSettings.region = 'Content';
+                this.btnPrintClick()
                 break;
             case 'export':
                 this.selectedItem.exportDialog.show();
@@ -815,7 +879,8 @@ export class UtilityMethods {
                 this.executeEditMenu(diagram, commandType);
                 break;
         }
-        //  diagram.dataBind();
+        diagram.dataBind();
+
     };
 
     public executeEditMenu(diagram: Diagram, commandType: string) {
@@ -845,7 +910,14 @@ export class UtilityMethods {
                 break;
         }
     }
+    public btnPrintClick(): void {
+        let pageWidth: number = this.selectedItem.printSettings.pageWidth;
+        let pageHeight: number = this.selectedItem.printSettings.pageHeight;
+        let diagram: Diagram = this.selectedItem.diagram;
+        diagram.print({ pageHeight: pageHeight, pageWidth: pageWidth,
+        });
 
+    }
     public hideElements(elementType: string, diagram: Diagram) {
         var diagramContainer = document.getElementsByClassName('diagrambuilder-container')[0];
         if (diagramContainer.classList.contains(elementType)) {
@@ -899,6 +971,31 @@ export class UtilityMethods {
 
     public fileName() {
         return document.getElementById('diagramName').innerHTML;
+    }
+
+    public updateOrientation(diagram: Diagram) {
+        for (var i = 0; i < diagram.connectors.length; i++) {
+            var connector = diagram.connectors[i];
+            if ((diagram as any).layout.orientation === "Vertical") {
+                if (connector.sourcePortID === "rightPort" && connector.targetPortID === "leftPort") {
+                    connector.sourcePortID = 'bottomPort';
+                    connector.targetPortID = "topPort";
+                }
+                if (connector.sourcePortID === "leftPort" && connector.targetPortID === "rightPort") {
+                    connector.sourcePortID = 'topPort';
+                    connector.targetPortID = 'bottomPort';
+                }
+            } else if ((diagram as any).layout.orientation === "Horizontal") {
+                if (connector.sourcePortID === "bottomPort" && connector.targetPortID === "topPort"){
+                    connector.sourcePortID = 'rightPort';
+                    connector.targetPortID = "leftPort";
+                }
+                if (connector.sourcePortID === "topPort" && connector.targetPortID === "bottomPort") {
+                    connector.sourcePortID = 'leftPort';
+                    connector.targetPortID = 'rightPort';
+                }
+            }
+        }
     }
 
 }

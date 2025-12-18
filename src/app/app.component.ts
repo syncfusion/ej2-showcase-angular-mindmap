@@ -1,12 +1,12 @@
-import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, ViewChild, ViewEncapsulation, ChangeDetectionStrategy  } from '@angular/core';
 import { DiagramComponent, MindMapService } from '@syncfusion/ej2-angular-diagrams';
-import { BasicShapeModel, ConnectorConstraints, ConnectorModel, DataBinding, Diagram, DiagramRegions, DiagramTools, FileFormats, HierarchicalTree, MindMap, MouseEventArgs, Node, NodeConstraints, NodeModel, PointPort, PointPortModel, PortVisibility, RulerSettingsModel, ScrollSettingsModel, SelectorConstraints, SelectorModel, SnapConstraints, SnapSettingsModel, ToolBase, UndoRedo, UserHandleModel } from '@syncfusion/ej2-diagrams';
+import { BasicShapeModel, ConnectorConstraints, ConnectorModel, DataBinding, Diagram, DiagramRegions, DiagramTools, FileFormats, HierarchicalTree, MindMap, MouseEventArgs, Node, NodeConstraints, NodeModel, PointPort, PointPortModel, PortVisibility, RulerSettingsModel, ScrollSettingsModel, SelectorConstraints, SelectorModel, SnapConstraints, SnapSettingsModel, ToolBase, UserHandleModel } from '@syncfusion/ej2-diagrams';
 import { DropDownDataSources } from './scripts/dropdowndatasource';
 import { DataManager } from '@syncfusion/ej2-data';
 import { SelectorViewModel } from './scripts/selector';
-import { DiagramClientSideEvents } from './scripts/events';
+import {  DiagramClientSideEvents, MindMapPropertyBinding } from './scripts/events';
 import { PaperSize, UtilityMethods } from './scripts/utilitymethods';
-import { ButtonComponent, ChangeArgs, RadioButtonComponent } from '@syncfusion/ej2-angular-buttons';
+import { ButtonComponent, ChangeArgs, RadioButtonComponent, CheckBoxComponent } from '@syncfusion/ej2-angular-buttons';
 import { ChangeEventArgs as DropDownChangeEventArgs, DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import { PropertyChange } from './scripts/properties';
 import { ChangeEventArgs as NumericChangeEventArgs, ColorPickerEventArgs, SliderChangeEventArgs, TextBoxComponent } from '@syncfusion/ej2-angular-inputs';
@@ -15,11 +15,11 @@ import { DropDownButtonComponent, MenuEventArgs } from '@syncfusion/ej2-angular-
 import { BeforeOpenCloseMenuEventArgs, ClickEventArgs, ContextMenuComponent, NodeEditEventArgs, NodeKeyPressEventArgs, ToolbarComponent, TreeViewComponent } from '@syncfusion/ej2-angular-navigations';
 import { closest } from '@syncfusion/ej2-base';
 import { AnimationSettingsModel, DialogComponent } from '@syncfusion/ej2-angular-popups';
-
-Diagram.Inject(DataBinding, MindMap, HierarchicalTree, UndoRedo);
+Diagram.Inject(DataBinding, MindMap, HierarchicalTree);
 
 @Component({
   selector: 'app-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.css'],
   encapsulation: ViewEncapsulation.None
@@ -32,8 +32,6 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('exportDialog')
   public exportDialog: DialogComponent;
 
-  @ViewChild('printDialog')
-  public printDialog: DialogComponent;
 
   @ViewChild('radio1')
   public bezierRadioButton: RadioButtonComponent;
@@ -46,6 +44,12 @@ export class AppComponent implements AfterViewInit {
 
   @ViewChild('treeviewradio')
   public textRadioButton: RadioButtonComponent;
+
+  @ViewChild('horiZontalRadioBtn')
+  public horiZontalRadioBtn: RadioButtonComponent;
+
+  @ViewChild('verticalRadioBtn')
+  public verticalRadioBtn: RadioButtonComponent;
 
   @ViewChild('mindmapFontFamilyList')
   public mindmapFontFamilyList: DropDownListComponent;
@@ -77,6 +81,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('mindmapShape')
   public mindmapShape: DropDownListComponent;
 
+  @ViewChild('expandable')
+  public expandable: CheckBoxComponent;
+
   public diagramradioChecked: boolean = true;
 
   public textradioChecked: boolean = false;
@@ -86,6 +93,7 @@ export class AppComponent implements AfterViewInit {
   public dropDownDataSources: DropDownDataSources = new DropDownDataSources();
   public selectedItem: SelectorViewModel = new SelectorViewModel();
   public diagramEvents: DiagramClientSideEvents = new DiagramClientSideEvents(this.selectedItem);
+  public mindmapPropertyBinding: MindMapPropertyBinding = new MindMapPropertyBinding(this.selectedItem);
   public utilityMethods: UtilityMethods = new UtilityMethods(this.selectedItem);
   public PropertyChange: PropertyChange = new PropertyChange(this.selectedItem);
   public printingButtons: Object[] = this.getDialogButtons('print');
@@ -102,10 +110,10 @@ export class AppComponent implements AfterViewInit {
     this.selectedItem.btnZoomIncrement = this.btnZoomIncrement;
     this.selectedItem.treeObj = this.treeObj;
     this.selectedItem.exportDialog = this.exportDialog;
-    this.selectedItem.printDialog = this.printDialog;
+
     this.selectedItem.btnHideToolbar = this.btnHideToolbar;
     this.selectedItem.mindmapShape = this.mindmapShape;
-    //this.diagramRadioButton.checked = true;
+
     document.getElementById('closeIconDiv').onclick = this.onHideNodeClick.bind(this);
     document.onmouseover = this.menumouseover.bind(this);
     let element: any = document.getElementsByClassName('e-control e-textbox e-lib');
@@ -119,11 +127,11 @@ export class AppComponent implements AfterViewInit {
   // Datasource for the diagram and treeview
 
   public data = [
-    { id: '1', Label: 'Creativity', branch: 'Root', hasChild: true, level: 0, fill: "#D0ECFF", strokeColor: "#80BFEA", orientation: 'Root' },
+    { id: '1', Label: 'Root', branch: 'Root', hasChild: true, level: 0, fill: "#D0ECFF", strokeColor: "#80BFEA", orientation: 'Root' },
   ];
 
   public workingData = [
-    { id: '1', Label: 'Creativity', branch: 'Root', hasChild: true, level: 0, fill: "#D0ECFF", strokeColor: "#80BFEA", orientation: 'Root' },
+    { id: '1', Label: 'Root', branch: 'Root', hasChild: true, level: 0, fill: "#D0ECFF", strokeColor: "#80BFEA", orientation: 'Root' },
   ];
 
   // Maps the treeview datasource value to fields property
@@ -143,7 +151,6 @@ export class AppComponent implements AfterViewInit {
       this.addTreeNode();
     } else {
       setTimeout(() => {
-        console.log(args);
       }, 0);
     }
   }
@@ -251,57 +258,37 @@ export class AppComponent implements AfterViewInit {
           click: this.btnExportClick.bind(this), buttonModel: { content: 'Export', cssClass: 'e-flat e-db-primary', isPrimary: true }
         });
         break;
-      case 'print':
-        buttons.push({
-          click: this.btnPrintClick.bind(this), buttonModel: { content: 'Print', cssClass: 'e-flat e-db-primary', isPrimary: true }
-        });
-        break;
-
     }
     buttons.push({
       click: this.btnCancelClick.bind(this), buttonModel: { content: 'Cancel', cssClass: 'e-flat', isPrimary: true }
     });
     return buttons;
   }
-
+  public diagramNameChange(args: any): void {
+    (document.getElementById('diagramName') as any).innerHTML = (document.getElementById('diagramEditable') as HTMLInputElement).value;
+    document.getElementsByClassName('db-diagram-name-container')[0].classList.remove('db-edit-name');
+  }
+  public diagramNameKeyDown(args: KeyboardEvent): void {
+    if (args.which === 13) {
+        (document.getElementById('diagramName') as any).innerHTML = (document.getElementById('diagramEditable') as HTMLInputElement).value;
+        document.getElementsByClassName('db-diagram-name-container')[0].classList.remove('db-edit-name');
+    }
+  }
+  public renameDiagram(args: MouseEvent): void {
+    document.getElementsByClassName('db-diagram-name-container')[0].classList.add('db-edit-name');
+    let element: HTMLInputElement = (document.getElementById('diagramEditable') as HTMLInputElement);
+    element.value = (document.getElementById('diagramName') as any).innerHTML;
+    element.focus();
+  }
   private btnExportClick(): void {
     let diagram: Diagram = this.selectedItem.diagram;
     diagram.exportDiagram({
-      fileName: document.getElementById('diagramName').innerHTML,
+      fileName: (document.getElementById("exportfileName") as HTMLInputElement).value,
       format: this.selectedItem.exportSettings.format as FileFormats,
-      region: this.selectedItem.exportSettings.region as DiagramRegions
     });
     this.exportDialog.hide();
   };
-  private btnPrintClick(): void {
-    let pageWidth: number = this.selectedItem.printSettings.pageWidth;
-    let pageHeight: number = this.selectedItem.printSettings.pageHeight;
-    let paperSize: PaperSize = this.selectedItem.utilityMethods.getPaperSize(this.selectedItem.printSettings.paperSize);
-    if (paperSize.pageHeight && paperSize.pageWidth) {
-      pageWidth = paperSize.pageWidth;
-      pageHeight = paperSize.pageHeight;
-    }
-    if (this.selectedItem.pageSettings.isPortrait) {
-      if (pageWidth > pageHeight) {
-        let temp: number = pageWidth;
-        pageWidth = pageHeight;
-        pageHeight = temp;
-      }
-    } else {
-      if (pageHeight > pageWidth) {
-        let temp: number = pageHeight;
-        pageHeight = pageWidth;
-        pageWidth = temp;
-      }
-    }
-    let diagram: Diagram = this.selectedItem.diagram;
-    diagram.print({
-      region: this.selectedItem.printSettings.region as DiagramRegions, pageHeight: pageHeight, pageWidth: pageWidth,
-      multiplePage: !this.selectedItem.printSettings.multiplePage,
-      pageOrientation: this.selectedItem.printSettings.isPortrait ? 'Portrait' : 'Landscape'
-    });
-    this.printDialog.hide();
-  }
+
   private btnCancelClick(args: MouseEvent): void {
     let ss: HTMLElement = args.target as HTMLElement;
     let key: string = ss.offsetParent.id;
@@ -309,9 +296,7 @@ export class AppComponent implements AfterViewInit {
       case 'exportDialog':
         this.exportDialog.hide();
         break;
-      case 'printDialog':
-        this.printDialog.hide();
-        break;
+
     }
   };
 
@@ -324,14 +309,59 @@ export class AppComponent implements AfterViewInit {
     this.diagramradioChecked = true;
     this.textradioChecked = false;
     this.diagram.dataSourceSettings.dataSource = new DataManager(this.selectedItem.workingData);
+    let conneectorType = this.diagram.connectors[0]?.type;
     this.diagram.dataBind();
+    if(conneectorType) {this.updateConnectorType(conneectorType)};
+    this.updateOrientation();
+    this.diagram.nodes.forEach(node => {
+      node.expandIcon.shape = this.expandable.checked ? 'Minus' : 'None';
+      node.collapseIcon.shape = this.expandable.checked ? 'Plus' : 'None';
+      this.selectedItem.workingData.forEach((data: any) => {
+        if ((node.data as any).id === data.id) {
+          node.shape.type = data.nodeShapeType;
+          if (data.nodeShapeType === 'Basic') {
+            (node.shape as any).shape = data.nodeShape;
+            node.height = data.nodeHeight;
+          }
+          else {
+            (node.shape as any).data = data.nodeShapeData;
+            node.height = data.nodeHeight;
+          }
+          if(node.style.strokeWidth || node.style.strokeDashArray) {
+            if ((node as Node).inEdges.length > 0) {
+              var connector1 = this.selectedItem.utilityMethods.getConnector(this.diagram.connectors, (node as Node).inEdges[0]);
+              if ((data as any).conStrokeColor) {
+                connector1.style.strokeColor = (data as any).conStrokeColor;
+              }
+              if ((data as any).conStrokeWidth) {
+                connector1.style.strokeWidth = (data as any).conStrokeWidth;
+              }
+              if ((data as any).conStrokeStyle) {
+                connector1.style.strokeDashArray = (data as any).conStrokeStyle;
+              }
+
+            }
+          }
+          node.annotations[0].style.fontFamily = data.fontFamily ? data.fontFamily : node.annotations[0].style.fontFamily;
+          node.annotations[0].style.fontSize = data.fontSize ? data.fontSize : node.annotations[0].style.fontSize;
+          node.annotations[0].style.color = data.fontColor ? data.fontColor : node.annotations[0].style.color;
+          node.annotations[0].style.opacity = data.textOpacity ? data.textOpacity : node.annotations[0].style.opacity;
+          node.annotations[0].style.bold = data.bold ? data.bold : node.annotations[0].style.bold;
+          node.annotations[0].style.italic = data.italic ? data.italic : node.annotations[0].style.italic;
+          node.annotations[0].style.textDecoration = data.textDecoration ? data.textDecoration : node.annotations[0].style.textDecoration;
+        }
+
+      });
+
+    });
     document.getElementById('overlay').style.display = 'block';
     document.getElementById('treeview').style.display = 'none';
     if(this.btnWindowMenu.items[2].iconCss === 'sf-icon-check-tick'){
     document.getElementById('shortcutDiv').style.visibility = 'visible';
     }
-   // this.btnWindowMenu.items[2].iconCss = document.getElementById('shortcutDiv').style.visibility === "hidden" ? '' : 'sf-icon-check-tick';
-    // this.diagram.fitToPage();
+    this.diagramEvents.maintainExpandState(this.diagram);
+    this.diagram.doLayout();
+    this.diagram.fitToPage();
     this.diagram.updateViewPort();
   }
 
@@ -358,7 +388,7 @@ export class AppComponent implements AfterViewInit {
 
   // maps the appropriate column to fields property for Mindmaplevel dropdownlist
   public fields: Object = { text: 'text', value: 'value' };
-
+  public dropdownListFields: Object = { text: 'text', value: 'value' };
   // set a value to Mindmaplevel dropdownlist prevalue
   public value: string = 'Level0';
 
@@ -402,7 +432,7 @@ export class AppComponent implements AfterViewInit {
 
   public snapSettings: SnapSettingsModel = { constraints: SnapConstraints.None };
 
-  public tool: DiagramTools = DiagramTools.SingleSelect;
+  public tool: DiagramTools = DiagramTools.Default;
 
   public layout: Object = {
     type: 'MindMap', horizontalSpacing: 50, verticalSpacing: 50,
@@ -444,12 +474,16 @@ export class AppComponent implements AfterViewInit {
   public isExpanded: boolean = false;
 
   public getNodeDefaults(obj: NodeModel) {
+    if((obj.data as any).branch === 'Root') {
+      obj.constraints = NodeConstraints.Default &~ NodeConstraints.Delete;
+    }
     if (obj.id !== 'textNode' && (obj.data as any)) {
       obj.constraints = NodeConstraints.Default & ~NodeConstraints.Drag;
       let empInfo = (obj.data as any);
       obj.style = {
         fill: (obj.data as any).fill, strokeColor: (obj.data as any).strokeColor,
-        strokeWidth: 1
+        strokeWidth: (obj.data as any).strokeWidth ? (obj.data as any).strokeWidth : 1,
+        opacity: (obj.data as any).shapeOpacity, strokeDashArray: (obj.data as any).strokeStyle
       };
       if (empInfo.branch === 'Root') {
         obj.addInfo = { level: 0 };
@@ -458,23 +492,56 @@ export class AppComponent implements AfterViewInit {
       }
       obj.addInfo = { level: (obj.data as any).level, orientation: (obj.data as any).orientation };
       if ((obj.data as any).orientation === "Left") {
-        obj.expandIcon = { shape: this.selectedItem.isExpanded ? 'Minus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black', offset: { x: 1, y: 0.5 } };
-        obj.collapseIcon = { shape: this.selectedItem.isExpanded ? 'Plus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black', offset: { x: 1, y: 0.5 } };
+        obj.expandIcon = { shape: this.selectedItem.isExpanded ? 'Minus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black' };
+        obj.collapseIcon = { shape: this.selectedItem.isExpanded ? 'Plus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black'};
       } else if ((obj.data as any).orientation === "Root") {
-        obj.expandIcon = { shape: this.selectedItem.isExpanded ? 'Minus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black', offset: { x: 0.5, y: 1 } };
-        obj.collapseIcon = { shape: this.selectedItem.isExpanded ? 'Plus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black', offset: { x: 0.5, y: 1 } };
+        obj.expandIcon = { shape: this.selectedItem.isExpanded ? 'Minus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black',};
+        obj.collapseIcon = { shape: this.selectedItem.isExpanded ? 'Plus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black',};
       } else {
-        obj.expandIcon = { shape: this.selectedItem.isExpanded ? 'Minus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black', offset: { x: 0, y: 0.5 } };
-        obj.collapseIcon = { shape: this.selectedItem.isExpanded ? 'Plus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black', offset: { x: 0, y: 0.5 } };
+        obj.expandIcon = { shape: this.selectedItem.isExpanded ? 'Minus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black',};
+        obj.collapseIcon = { shape: this.selectedItem.isExpanded ? 'Plus' : 'None', height: 10, width: 10, fill: 'white', borderColor: 'black',};
       }
-      (obj.shape as BasicShapeModel).cornerRadius = empInfo.branch === 'Root' ? 5 : 0;
-      obj.shape = empInfo.branch === 'Root' ? { type: 'Basic', shape: 'Ellipse' } : { type: 'Basic', shape: 'Rectangle' };
+      (obj.shape as BasicShapeModel).cornerRadius = empInfo.branch === 'Root' ? (obj.shape as any).shape === 'Ellipse' ? 5 : 0 : 0;
+      if(obj.shape.type === 'Path' && (obj.data as any).nodeShapeData) {
+          (obj.shape as any).data = (obj.data as any).nodeShapeData;
+      }
       obj.width = empInfo.branch === 'Root' ? 150 : 100;
-      obj.height = empInfo.branch === 'Root' ? 75 : this.selectedItem.childHeight;
+      obj.height = obj.data && (obj.data as any).nodeHeight ? (obj.data as any).nodeHeight : (empInfo.branch === 'Root' ? 75 : this.selectedItem.childHeight);
       obj.annotations = [{
         content: empInfo.Label,
 
       }];
+      if (obj.data && (obj.data as any).annotation) {
+        obj.annotations[0] = (obj.data as any).annotation;
+      }
+      if (obj.data && obj.annotations && obj.annotations.length > 0) {
+        const data = obj.data;
+        const annotation = obj.annotations[0];
+
+        annotation.style = annotation.style || {};
+
+        if ((data as any).fontFamily) {
+          annotation.style.fontFamily = (data as any).fontFamily;
+        }
+        if ((data as any).fontSize) {
+          annotation.style.fontSize = (data as any).fontSize;
+        }
+        if ((data as any).color) {
+          annotation.style.color = (data as any).color;
+        }
+        if ((data as any).textOpacity !== undefined) {
+          annotation.style.opacity = (data as any).textOpacity;
+        }
+        if ((data as any).bold !== undefined) {
+          annotation.style.bold = (data as any).bold;
+        }
+        if ((data as any).italic !== undefined) {
+          annotation.style.italic = (data as any).italic;
+        }
+        if ((data as any).textDecoration) {
+          annotation.style.textDecoration = (data as any).textDecoration;
+        }
+      }
       let port = this.getPort();
       if (obj.ports && !obj.ports.length) {
         for (let i = 0; i < port.length; i++) {
@@ -483,11 +550,6 @@ export class AppComponent implements AfterViewInit {
       }
       this.hideUserHandle('devare');
     }
-    setTimeout(() => {
-      if (this.selectedItem.mindMapPatternTarget) {
-        this.utilityMethods.mindmapPatternChange(this.selectedItem.mindMapPatternTarget, true);
-      }
-    }, 0);
   }
 
   public getPort() {
@@ -500,6 +562,14 @@ export class AppComponent implements AfterViewInit {
         id: 'rightPort', offset: { x: 1, y: 0.5 }, visibility: PortVisibility.Hidden,
         style: { fill: 'black' }
       },
+      {
+        id: 'topPort', offset: { x: 0.5, y: 0 }, visibility: PortVisibility.Hidden,
+        style: { fill: 'black' }
+      },
+      {
+        id: 'bottomPort', offset: { x: 0.5, y: 1 }, visibility: PortVisibility.Hidden,
+        style: { fill: 'black' }
+      }
       ];
     return port;
   }
@@ -523,12 +593,14 @@ export class AppComponent implements AfterViewInit {
     if ((targetNode.data as any).branch === 'Right' || (targetNode.data as any).branch === 'subRight') {
       connector.sourcePortID = sourceNode.ports[0].id;
       connector.targetPortID = targetNode.ports[1].id;
-      connector.style = { strokeWidth: 1, strokeColor: '#8E44AD' };
+      connector.style = { strokeWidth: (targetNode.data as any).conStrokeWidth ? (targetNode.data as any).conStrokeWidth : 1,
+                strokeColor: (targetNode.data as any).conStrokeColor ? (targetNode.data as any).conStrokeColor : '#8E44AD' };
     }
     else if ((targetNode.data as any).branch === 'Left' || (targetNode.data as any).branch === 'subLeft') {
       connector.sourcePortID = sourceNode.ports[1].id;
       connector.targetPortID = targetNode.ports[0].id;
-      connector.style = { strokeWidth: 1, strokeColor: '#3498DB' };
+      connector.style = {  strokeWidth: (targetNode.data as any).conStrokeWidth ? (targetNode.data as any).conStrokeWidth : 1,
+                strokeColor: (targetNode.data as any).conStrokeColor ? (targetNode.data as any).conStrokeColor :'#3498DB' };
     }
     connector.constraints = ConnectorConstraints.Default & ~ConnectorConstraints.Select;
     return connector;
@@ -631,6 +703,53 @@ export class AppComponent implements AfterViewInit {
     this.diagram.dataBind();
   }
 
+  public updateConnectorType(connectorType: any): void {
+    for (let i = 0; i < this.diagram.connectors.length; i++) {
+      this.diagram.connectors[i].type = connectorType
+    }
+    this.diagram.dataBind();
+  }
+
+  public horiZontalRadioBtnChange(args: ChangeArgs): void {
+    this.verticalRadioBtn.checked = false;
+    this.verticalRadioBtn.dataBind();
+    (this.diagram as any).layout.orientation = "Horizontal";
+    this.updateOrientation();
+    this.diagram.dataBind();
+  }
+
+  public verticalRadioBtnChange(args: ChangeArgs): void {
+    this.horiZontalRadioBtn.checked = false;
+    this.horiZontalRadioBtn.dataBind();
+    (this.diagram as any).layout.orientation = "Vertical";
+    this.updateOrientation();
+    this.diagram.dataBind();
+  }
+  public updateOrientation(){
+    for (var i = 0; i < this.diagram.connectors.length; i++) {
+      var connector = this.diagram.connectors[i];
+      if ((this.diagram as any).layout.orientation === "Vertical") {
+        if (connector.sourcePortID === "rightPort" && connector.targetPortID === "leftPort") {
+          connector.sourcePortID = 'bottomPort';
+          connector.targetPortID = "topPort";
+        }
+        if (connector.sourcePortID === "leftPort" && connector.targetPortID === "rightPort") {
+          connector.sourcePortID = 'topPort';
+          connector.targetPortID = 'bottomPort';
+        }
+      } else if ((this.diagram as any).layout.orientation === "Horizontal") {
+        if (connector.sourcePortID === "bottomPort" && connector.targetPortID === "topPort") {
+          connector.sourcePortID = 'rightPort';
+          connector.targetPortID = "leftPort";
+        }
+        if (connector.sourcePortID === "topPort" && connector.targetPortID === "bottomPort") {
+          connector.sourcePortID = 'leftPort';
+          connector.targetPortID = 'rightPort';
+        }
+      }
+    }
+  }
+
   // Dropdownlist events
   public mindmapShapeChange(args: DropDownChangeEventArgs) {
     this.selectedItem.nodeShape = args.value as string;
@@ -676,6 +795,7 @@ export class AppComponent implements AfterViewInit {
     this.selectedItem.isExpanded = args.checked;
     for (let i = 0; i < this.diagram.nodes.length; i++) {
       if ((this.diagram.nodes[i] as any).outEdges.length > 0) {
+        this.diagram.nodes[i].isExpanded=true;
         this.diagram.nodes[i].expandIcon.shape = args.checked ? "Minus" : "None";
         this.diagram.nodes[i].collapseIcon.shape = args.checked ? "Plus" : "None";
       }
@@ -699,7 +819,6 @@ export class AppComponent implements AfterViewInit {
   }
 
   public levelBeforeOpen(args: any): void {
-      console.log(args);
   }
 
 
@@ -737,7 +856,6 @@ export class AppComponent implements AfterViewInit {
     for (let i = 0; i < args.element.children.length; i++) {
       (args.element.children[i] as any).style.display = 'block';
     }
-    //(args.element.children[0]).style.display = 'block';
     if (args.event && closest(args.event.target as any, '.e-dropdown-btn') !== null) {
       args.cancel = true;
     }
@@ -753,7 +871,6 @@ export class AppComponent implements AfterViewInit {
   }
 
   public toolbarCreated() {
-    console.log('toolbar created');
   }
 
   private buttonInstance: any;
@@ -795,14 +912,40 @@ export class AppComponent implements AfterViewInit {
     var file = file1.rawFile;
     var reader = new FileReader();
     reader.readAsText(file);
-    reader.onloadend = AppComponent.loadDiagram
+    reader.onloadend = this.loadDiagram.bind(this);
+    AppComponent.clearUploader();
+    setTimeout(() => {
+      let newDiagram = (document.getElementById('diagram') as any).ej2_instances[0];
+      newDiagram.fitToPage({ mode: 'Page' });
+      this.updateOrientation();
+      this.selectedItem.workingData = [];
+      if (newDiagram.dataSourceSettings.dataSource && newDiagram.dataSourceSettings.dataSource.dataSource.json && newDiagram.dataSourceSettings.dataSource.dataSource.json.length > 0) {
+        for (let i = 0; i < newDiagram.dataSourceSettings.dataSource.dataSource.json.length; i++) {
+          let treeData = newDiagram.dataSourceSettings.dataSource.dataSource.json[i];
+          this.selectedItem.workingData.push(treeData);
+        }
+      }
+    },2000);
+
   }
-  
+
+
+  public static  clearUploader(): void {
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+        fileInput.value = '';
+    }}
+
   //Load the diagraming object.
-  public static loadDiagram(event:any) {
-    let diagrm = (document.getElementById('diagram') as any).ej2_instances[0];
-    diagrm.loadDiagram(event.target.result);
-   
+  public loadDiagram(event:any) {
+    let diagram = (document.getElementById('diagram') as any).ej2_instances[0];
+    diagram.loadDiagram(event.target.result);
+    diagram.nodes.forEach((node : NodeModel)=> {
+        node.expandIcon.shape = this.expandable?.checked ? 'Minus' : 'None';
+        node.collapseIcon.shape = this.expandable?.checked ? 'Plus' : 'None';
+    });
+    this.updateOrientation();
+    diagram.fitToPage();
   }
 
   // Property panel events
@@ -866,7 +1009,7 @@ export class AppComponent implements AfterViewInit {
         this.selectedItem.utilityMethods.addMultipleChild();
         break;
     }
-    if (item === 'Undo' || item === 'Redo' || item === 'Select Tool' || item === 'Pan Tool' || item === 'Add Child' || item === 'Add Sibling' || item === 'Add Multiple Child') {
+    if (item === 'Select Tool' || item === 'Pan Tool' || item === 'Add Child' || item === 'Add Sibling' || item === 'Add Multiple Child') {
       if (args.item.cssClass.indexOf('tb-item-selected') === -1) {
         this.selectedItem.utilityMethods.removeSelectedToolbarItem();
         args.item.cssClass += ' tb-item-selected';
@@ -893,7 +1036,16 @@ export class AppComponent implements AfterViewInit {
     }
     toolbarEditor.dataBind();
   }
-
+  public addMultichildFocus()
+  {
+    let textchildbox = (document.getElementById('multipleChildText') as any).ej2_instances[0];
+    if (textchildbox.value !== null && textchildbox.value !== '') {
+      (document.getElementById('addchild')as any).disabled = false;
+    }
+    else {
+      (document.getElementById('addchild')as any).disabled = true;
+    }
+  }
 
 
 
@@ -962,7 +1114,7 @@ class DeleteClick extends ToolBase {
       }
     }
   }
-
 }
+
 
 
