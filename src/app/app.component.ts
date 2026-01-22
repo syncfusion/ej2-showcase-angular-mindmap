@@ -23,7 +23,7 @@ Diagram.Inject(DataBinding, MindMap, HierarchicalTree);
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.css'],
   encapsulation: ViewEncapsulation.None,
-  standalone: true
+  standalone: false
 })
 export class AppComponent implements AfterViewInit {
 
