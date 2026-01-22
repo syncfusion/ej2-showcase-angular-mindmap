@@ -22,7 +22,8 @@ Diagram.Inject(DataBinding, MindMap, HierarchicalTree);
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  standalone: true
 })
 export class AppComponent implements AfterViewInit {
 
